@@ -1,0 +1,17 @@
+## Requisitos banco de dados
+CREATE TABLE IF NOT EXISTS black_list (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip VARCHAR(20) NOT NULL,
+  tentativa INT NOT NULL,
+  bloqueio_permanente BOOLEAN DEFAULT 0,
+  data_inclusao DATETIME NOT NULL,
+  data_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
+  rota VARCHAR(255) NOT NULL,
+  observacao VARCHAR(255) NULL
+);
+
+CREATE TABLE IF NOT EXISTS token_csrf (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip VARCHAR(50) NOT NULL,
+  token VARCHAR(255) NOT NULL
+);
