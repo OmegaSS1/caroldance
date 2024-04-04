@@ -10,15 +10,8 @@ use DI\ContainerBuilder;
 use Slim\Factory\AppFactory;
 use Slim\Factory\ServerRequestCreatorFactory;
 
-
-require __DIR__ . '/../vendor/autoload.php';
-
-$ip = "http://";
-if($_SERVER['SERVER_PORT'] == 443 || isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off' || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
-	$ip = "https://";
-
-define('ENV', parse_ini_file(__DIR__.'/../.env'));
-define('IP', $ip . $_SERVER['REMOTE_ADDR'] ?? $_SERVER['REMOTE_HOST'] ?? '127.0.0.1');
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ .'/../app/constants.php';
 
 // Instantiate PHP-DI ContainerBuilder
 $containerBuilder = new ContainerBuilder();
@@ -28,15 +21,15 @@ if (false) { // Should be set to true in production
 }
 
 // Set up settings
-$settings = require __DIR__ . '/../app/settings.php';
+$settings = require_once __DIR__ . '/../app/settings.php';
 $settings($containerBuilder);
 
 // Set up dependencies
-$dependencies = require __DIR__ . '/../app/dependencies.php';
+$dependencies = require_once __DIR__ . '/../app/dependencies.php';
 $dependencies($containerBuilder);
 
 // Set up repositories
-$repositories = require __DIR__ . '/../app/repositories.php';
+$repositories = require_once __DIR__ . '/../app/repositories.php';
 $repositories($containerBuilder);
 
 // Build PHP-DI Container instance
@@ -48,11 +41,11 @@ $app = AppFactory::create();
 $callableResolver = $app->getCallableResolver();
 
 // Register middleware
-$middleware = require __DIR__ . '/../app/middleware.php';
+$middleware = require_once __DIR__ . '/../app/middleware.php';
 $middleware($app);
 
 // Register routes
-$routes = require __DIR__ . '/../app/routes.php';
+$routes = require_once __DIR__ . '/../app/routes.php';
 $routes($app);
 
 /** @var SettingsInterface $settings */

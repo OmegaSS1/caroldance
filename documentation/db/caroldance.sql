@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS perfil_usuario (
 
 INSERT INTO perfil_usuario (nome) VALUES ('Visitante');
 INSERT INTO perfil_usuario (nome, usuario_dashboard, usuario_aluno) VALUES ('Usuario', 1, 1);
-INSERT INTO perfil_usuario (nome, adm_dashboard, adm_calendario, ) VALUES ('Usuario', 1, 1);
+INSERT INTO perfil_usuario (nome, adm_dashboard, adm_calendario) VALUES ('Administrador', 1, 1);
+INSERT INTO perfil_usuario (nome, adm_dashboard, adm_calendario, adm_cadastro_aluno, adm_cadastro_usuario, adm_cadastro_atividade, adm_relatorio_aluno, adm_relatorio_usuario, adm_relatorio_balancete, adm_grafico_atividade_mensal, adm_grafico_mensalidade_mes) VALUES ('Administrador Master', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
 
 DROP TABLE IF EXISTS local;
 CREATE TABLE IF NOT EXISTS local (
@@ -41,6 +42,8 @@ CREATE TABLE IF NOT EXISTS local (
   dh_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP(),
   status BOOLEAN DEFAULT 1
 ) ENGINE=InnoDB;
+
+INSERT INTO local (nome) VALUES ('BA - Bahia');
 
 DROP TABLE IF EXISTS usuario;
 CREATE TABLE IF NOT EXISTS usuario (
@@ -54,15 +57,15 @@ CREATE TABLE IF NOT EXISTS usuario (
   telefone_whatsapp VARCHAR(20) NOT NULL,
   telefone_recado VARCHAR(20) NULL,
   senha VARCHAR(100) NOT NULL,
-  token_redefinicao_senha VARCHAR(100) NULL,
+  token_redefinicao_senha VARCHAR(255) NULL,
   dh_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
   dh_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
   status BOOLEAN DEFAULT 1,
   FOREIGN KEY (perfil_usuario_id) REFERENCES perfil_usuario(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
-DROP TABLE IF EXISTS servico_aluno;
-CREATE TABLE IF NOT EXISTS servico_aluno (
+DROP TABLE IF EXISTS atividade_aluno;
+CREATE TABLE IF NOT EXISTS atividade_aluno (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nome VARCHAR(50) NOT NULL,
   valor DECIMAL(12, 2) NOT NULL CHECK (valor > 0.00),
@@ -102,11 +105,11 @@ CREATE TABLE IF NOT EXISTS aluno (
   sobrenome VARCHAR(20) NOT NULL,
   data_nascimento DATE NOT NULL,
   cpf VARCHAR(11) UNIQUE NOT NULL,
-  servico_aluno_id INT REFERENCES servico_aluno(id),
+  atividade_aluno_id INT REFERENCES atividade_aluno(id),
   dh_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
   dh_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
   status BOOLEAN DEFAULT 1,
-  FOREIGN KEY (servico_aluno_id) REFERENCES servico_aluno(id) ON DELETE SET NULL
+  FOREIGN KEY (atividade_aluno_id) REFERENCES atividade_aluno(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
 DROP TABLE IF EXISTS responsavel;
@@ -127,7 +130,7 @@ DROP TABLE IF EXISTS mensalidade;
 CREATE TABLE IF NOT EXISTS mensalidade (
   id INT AUTO_INCREMENT PRIMARY KEY,
   aluno_id INT REFERENCES aluno(id),
-  servico_aluno_id INT REFERENCES servico_aluno(id),
+  atividade_aluno_id INT REFERENCES atividade_aluno(id),
   valor DECIMAL(10, 2) NOT NULL,
   mes SET('Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'),
   dh_vencimento TIMESTAMP NOT NULL,
@@ -138,7 +141,7 @@ CREATE TABLE IF NOT EXISTS mensalidade (
   dh_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP(),
   status BOOLEAN DEFAULT 1,
   FOREIGN KEY (aluno_id) REFERENCES aluno(id),
-  FOREIGN KEY (servico_aluno_id) REFERENCES servico_aluno(id)
+  FOREIGN KEY (atividade_aluno_id) REFERENCES atividade_aluno(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS black_list (

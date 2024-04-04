@@ -19,9 +19,17 @@ interface UserRepository
     public function findUserOfId(int $id): User;
 
     /**
-     * @param string $email
+     * @param string $cpf
      * @return mixed
      * @throws boolean
      */
     public function findUserByCpf(string $cpf);
+
+    /**
+     * @param string $email
+     * @return mixed
+     * @throws boolean
+     */
+    public function findUserByEmail(string $email);
+
 }

@@ -19,7 +19,6 @@ class DataUserRepository implements UserRepository
 
     /**
      * @param DatabaseInterface $database
-     * @param User[]|null $users
      */
     public function __construct(DatabaseInterface $database)
     {
@@ -29,16 +28,16 @@ class DataUserRepository implements UserRepository
                 (int)    $v['id'], 
                 (string) $v['nome'], 
                 (string) $v['sobrenome'], 
-                (string) $v['dataNascimento'], 
+                (string) $v['data_nascimento'], 
                 (string) $v['email'], 
                 (string) $v['cpf'], 
-                (int)    $v['perfilUsuarioId'], 
-                (string) $v['telefoneWhatsapp'], 
-                (string) $v['telefoneRecado'], 
+                (int)    $v['perfil_usuario_id'], 
+                (string) $v['telefone_whatsapp'], 
+                (string) $v['telefone_recado'], 
                 (string) $v['senha'], 
-                (string) $v['tokenRedefinicaoSenha'], 
-                (string) $v['dhCriacao'], 
-                (string) $v['dhAtualizacao'], 
+                (string) $v['token_redefinicao_senha'], 
+                (string) $v['dh_criacao'], 
+                (string) $v['dh_atualizacao'], 
                 (int)    $v['status']
             );
         }
@@ -69,11 +68,26 @@ class DataUserRepository implements UserRepository
      */
     public function findUserByCpf(string $cpf)
     {
-        $cpf_array = array_map(function($v){ return $v->getCpf(); }, $this->users);
-        $key = array_search($cpf, $cpf_array, true);
+        $cpfArray = array_map(function($v){ return $v->getCpf(); }, $this->users);
+        $key = array_search($cpf, $cpfArray, true);
         
         if ($key === false) {
             return false;
+        }
+
+        return $this->users[$key];
+    }
+
+        /**
+     * {@inheritDoc}
+     */
+    public function findUserByEmail(string $email)
+    {
+        $emailArray = array_map(function($v){ return $v->getEmail(); }, $this->users);
+        $key = array_search($email, $emailArray, true);
+        
+        if ($key === false) {
+        return false;
         }
 
         return $this->users[$key];

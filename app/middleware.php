@@ -7,5 +7,5 @@ use App\Application\Middleware\ValidateTokenCSRFMiddleware;
 use Slim\App;
 
 return function (App $app) {
-    $app->add(ValidateTokenCSRFMiddleware::class);
+    // $app->add(ValidateTokenCSRFMiddleware::class);
 };

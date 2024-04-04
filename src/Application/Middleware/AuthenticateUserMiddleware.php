@@ -19,7 +19,7 @@ class AuthenticateUserMiddleware implements Middleware {
   use Helper;
   private DatabaseInterface $database;
 	private string $table = "usuario";
-  private string $column = "email";
+  private string $column = "id";
 
   protected LoggerInterface $logger;
   public function __construct(LoggerInterface $logger, DatabaseInterface $database){
@@ -30,19 +30,16 @@ class AuthenticateUserMiddleware implements Middleware {
 
     $token = $request->getCookieParams()['Authorization'] ?? '';
     $decode_token = JWT::decode($token, new Key(ENV['SECRET_KEY_JWT'], 'HS256'));
-    $user = $this->database->select('id', $this->table, "{$this->column} = '{$decode_token->data->user}'", "status = 1");
+    $user = $this->database->select('id', $this->table, "{$this->column} = '{$decode_token->data->id}'", "status = 1");
 
     if($decode_token->iss != IP) throw new ExpiredTokenException($request, $this->database);
     else if(empty($user)) throw new ExpiredTokenException($request, $this->database);
 
-    $request = $request->withAttribute('USER', $user);
-    $response = $handler->handle($request);
+    $request = $request->withAttribute('USER', $decode_token);
 
-    $tokenJWT = (new GenerateTokenJWTMiddleware($decode_token->iss, $decode_token->data->user))->getToken();
-    $tokenCSRF = $this->generateTokenCSRF(IP);
+    $tokenJWT = (new GenerateTokenJWTMiddleware($decode_token->iss, $decode_token->data->id))->getToken();
 
-    return $response
-    ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None")
-    ->withAddedHeader('Set-Cookie', "X-Csrf-Token=$tokenCSRF; Path=/; HttpOnly; Secure; SameSite=None");
+    return $handler->handle($request)
+    ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None");
   }
 }

@@ -8,14 +8,14 @@ class GenerateTokenJWTMiddleware {
 
   private string $token;
 
-  public function __construct(string $host, string $user, int $minutes = 30){
+  public function __construct(string $host, $user, int $minutes = 30){
     $payload = array(
       "iss" => $host,
       "aud" => $host,
       "iat" => time(),
       "exp" => time() + (60 * $minutes),
       "data" => [
-        "user" => $user
+        "id" => $user
       ]
     );
 

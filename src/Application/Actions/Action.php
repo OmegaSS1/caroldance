@@ -15,15 +15,12 @@ use Slim\Exception\HttpNotFoundException;
 abstract class Action
 {
     protected LoggerInterface $logger;
-
     protected Request $request;
-
     protected Response $response;
-
     protected array $args;
-
     protected  DatabaseInterface $database;
-
+    protected $USER;
+    
     public function __construct(LoggerInterface $logger, DatabaseInterface $database)
     {
         $this->logger = $logger;
@@ -38,6 +35,7 @@ abstract class Action
     {
         $this->request = $request;
         $this->response = $response;
+        $this->USER = $this->request->getAttribute("USER") ?? (object) ["data" => (object) ["id" => "Usuário não logado"]];
         $this->args = $args;
 
         try {

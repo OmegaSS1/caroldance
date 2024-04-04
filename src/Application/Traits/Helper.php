@@ -15,6 +15,7 @@ use Datetime;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception as PHPMailerException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -56,12 +57,14 @@ trait Helper {
 		$search = array('create', 'insert into', 'select', 'update', 'delete', 'where', ' and ', ' or ', ' not ', 'order', 'limit', 'group', 'by', 'inner', 'join', ' on ', 'union', 'min ', 'max', 'like', '[*]', 'from', '<', '>', 'script', 'svg', 'onload');
 		foreach ($search as $s) {
 			foreach ($form as $key => $value) {
-				preg_match("/$s/i", $value, $matches);
-				if (!empty($matches)) {
-					$this->logger->warning("[Helper - IP ".IP."] Tentativa de SQLInjection!", [$value]);
-					$value = str_replace($matches[0], '', $value);
+				if(is_string($value)){
+					preg_match("/$s/i", $value, $matches);
+					if (!empty($matches)) {
+						$this->logger->warning("[Helper - (removeSQLInjection) ID {$this->USER->data->id} IP ".IP."] Tentativa de SQLInjection!", [$value]);
+						$value = str_replace($matches[0], '', $value);
+					}
+					$form[$key] = trim(preg_replace("/\s+/", ' ', $value));
 				}
-				$form[$key] = trim(preg_replace("/\s+/", ' ', $value));
 			}
 		}
 		return $form;
@@ -70,11 +73,11 @@ trait Helper {
 	public function validKeysForm(array $form, array $keys){
 		foreach ($keys as $k) {
 			if (!isset($form[$k])) {
-				$this->logger->info("[Helper - IP ".IP."] Parametros incompletos!", $form);
+				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP ".IP."] Parametros incompletos!", $form);
 				throw new Exception("É obrigatório informar o campo ".strtoupper($k));
 			}
 			else if ($form[$k] == "") {
-				$this->logger->info("[Helper - IP ".IP."] Parametros incompletos!", $form);
+				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP ".IP."] Parametros incompletos!", $form);
 				throw new Exception("É obrigatório informar o campo ".strtoupper($k));
 			}
 		}
@@ -520,80 +523,87 @@ trait Helper {
 	//  *
 	//  * @return array
 	//  */
-	// public static function genPass(): array
-	// {
-	// 	$chars = '1234567890abcdefghijklmnopqrstuvwxyz';
-	// 	$specialChars = '!@#$&';
+	public function genPass(int $length = 15): array
+	{
+		$chars = '1234567890abcdefghijklmnopqrstuvwxyz';
+		$specialChars = '!@#$&';
 
-	// 	$lenChars = strlen($chars) - 1;
-	// 	$lenSpecialChars = strlen($specialChars) - 1;
-	// 	$length = 15;
-	// 	$pass = "";
+		$lenChars = strlen($chars) - 1;
+		$lenSpecialChars = strlen($specialChars) - 1;
+		$pass = "";
 
-	// 	for ($i = 0; $i < $length; $i++) {
-	// 		$pass .= $i % 5 != 0 ? $chars[rand(0, $lenChars)] : $specialChars[rand(0, $lenSpecialChars)];
-	// 	}
+		for ($i = 0; $i < $length; $i++) {
+			$pass .= $i % 5 != 0 ? $chars[rand(0, $lenChars)] : $specialChars[rand(0, $lenSpecialChars)];
+		}
 
-	// 	$hash = password_hash($pass, PASSWORD_DEFAULT);
-	// 	return array('pass' => $pass, 'hash' => $hash);
-	// }
+		$hash = password_hash($pass, PASSWORD_DEFAULT);
+		return array('pass' => $pass, 'hash' => $hash);
+	}
 
 
 	/**
 	 * Envia o email
 	 *
 	 * @param string $message Corpo da mensagem. Aceita tags HTML.
-	 * @param string $recipient Email do destinatário.
+	 * @param array $recipient Email do destinatário.
 	 * @param array $cc Email de quem receberá em copia.
 	 * @param array $cco Email de quem receberá em copia oculta.
 	 * @return true or exception.
 	 */
-	public static function sendMail(string $title, string $message, string $recipient, array $cc = null, array $cco = null)
+	public function sendMail(
+		string $title, string $message, 
+		array $recipient, array $cc = [], array $cco = [], 
+		bool $includeAttachment = false, array $attachmentPath = [],
+		bool $includeImage = false, string $imagePath = "")
 	{
 		$mail = new PHPMailer(true);
 
 		# SMTP settings
-		$mail->CharSet			= "utf-8";
-		$mail->isSMTP();                                            // Send using SMTP
-		// $mail->SMTPDebug = SMTP::DEBUG_SERVER; //descomentar esta linha para debugar envio e comentar em PRODUCAO
+		$mail->CharSet = "utf-8";
+		$mail->isSMTP();
+		// $mail->SMTPDebug = SMTP::DEBUG_SERVER;
 
 		## Config GMAIL
-		$mail->Host				= 'smtp.gmail.com';
-		$mail->SMTPAuth			= true;
-		$mail->Username			= 'theeeavenger@gmail.com';
-		$mail->Password			= 'qami rmqt rwak enoi';
-		$mail->SMTPAutoTLS	= true;
-		$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-		$mail->Port				= 587;
-		$mail->setFrom('theeeavenger@gmail.com');
+		$mail->Host				= ENV['EMAIL_HOST'];
+		$mail->SMTPAuth			= ENV['EMAIL_SMTP_AUTH'];
+		$mail->Username			= ENV['EMAIL_USERNAME'];
+		$mail->Password			= ENV['EMAIL_PASSWORD'];
+		$mail->SMTPAutoTLS		= ENV['EMAIL_SMTP_AUTO_TLS'];
+		$mail->SMTPSecure 		= ENV['EMAIL_SMTP_SECURE'];
+		$mail->Port				= ENV['EMAIL_PORT'];
+		$mail->setFrom(ENV['EMAIL_SET_FROM']);
 
-		$mail->addAddress(strtolower($recipient));
-		if (!empty($cc)) {
-			foreach ($cc as $rec) {
-				$mail->addCC(strtolower($rec));
-			}
-		}
-		if (!empty($cco)) {
-			foreach ($cco as $rec) {
-				$mail->addBCC(strtolower($rec));
-			}
-		}
+		foreach($recipient as $r)
+			$mail->addAddress(strtolower($r));
+
+		foreach ($cc as $rec) 
+			$mail->addCC(strtolower($rec));
+		
+		foreach ($cco as $rec)
+			$mail->addBCC(strtolower($rec));
 
 		//Content
-		$mail->isHTML(true);                                  //Set email format to HTML
-		## ADICIONAR IMAGEM
-		// $mail->AddEmbeddedImage(__DIR__ . '/../../public/assets/images/logo_sges.png', 'image');
-		## ADICIONAR NO BODY <img src='cid:image'>
+		$mail->isHTML(true);
 		$mail->Subject = $title;
-		// $mail->Body    = "<img src='cid:image'> <br><br>"
-			// . $message;
-		$mail->Body = $message;
+
+		if($includeAttachment){
+			foreach($attachmentPath as $attachment)
+				$mail->addAttachment($attachment);
+		}
+
+		if($includeImage){
+			$mail->AddEmbeddedImage($imagePath, 'image');
+			$mail->Body    = "<img src='cid:image'> <br><br>" . $message;
+		}
+		else
+			$mail->Body = $message;
 
 		try {
 			$mail->send();
 			return true;
-		} catch (Exception $e) {
-			throw new Exception('Erro ao tentar enviar o email! Tente novamente mais tarde.', 400);
+		} catch (PHPMailerException $e) {
+			$this->logger->error("[Helper - ID {$this->USER->data->id} IP ".IP."]", ["message" => $e->getMessage(), "code" => $e->getCode(), "file" => $e->getFile(), "line" => $e->getLine()]);
+			throw new PHPMailerException('Erro ao tentar enviar o email! Tente novamente mais tarde.', 400);
 		}
 	}
 
@@ -1420,8 +1430,7 @@ trait Helper {
 	 */
 	public function post(Request $request): array
 	{
-		$form = json_decode(file_get_contents('php://input'), true) ?? $request->getParsedBody();
-		return $this->removeSQLINJECTION($form);
+		return $this->removeSQLINJECTION($request->getParsedBody());
 	}
 
 	// /**
