@@ -9,7 +9,7 @@ use App\Domain\User\UserNotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
 
-class LinkForgotPassword extends SigninAction
+class SigninLinkForgotPasswordAction extends SigninAction
 {
 
   protected function action(): Response

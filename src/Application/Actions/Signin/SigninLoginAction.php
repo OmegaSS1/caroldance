@@ -8,12 +8,12 @@ use App\Application\Middleware\GenerateTokenJWTMiddleware;
 use App\Domain\User\UserNotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 
-class Signin extends SigninAction
+class SigninLoginAction extends SigninAction
 {
 
   protected function action(): Response
   {
-    $form = $this->validateForm($this->post($this->request));
+    $form = self::validateForm($this->post($this->request));
 
     $haveAluno = false;
 
@@ -24,9 +24,12 @@ class Signin extends SigninAction
     }
 
     $tokenJWT = (new GenerateTokenJWTMiddleware(IP, $user->getId()))->getToken();
+    $tokenCSRF = $this->generateTokenCSRF(IP);
 
     return $this->respondWithData(["responsavel" => $haveAluno])
-      ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None");
+    ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None")
+    ->withAddedHeader('Set-Cookie', "X-Csrf-Token=$tokenCSRF; Path=/; HttpOnly; Secure; SameSite=None");
+
   }
 
   private function validateForm(array $form): array

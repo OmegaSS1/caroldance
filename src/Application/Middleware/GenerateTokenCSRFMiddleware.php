@@ -11,6 +11,7 @@ class GenerateTokenCSRFMiddleware extends ActionMiddleware {
 
     $token = $this->generateTokenCSRF(IP);
 
-    return $this->respondWithData(['csrf' => $token]);
+    return $this->respondWithData(['message' => 'OK'])->withHeader('Set-Cookie', "X-Csrf-Token=$token; Path=/; HttpOnly; Secure; SameSite=None");
+
   }
 }

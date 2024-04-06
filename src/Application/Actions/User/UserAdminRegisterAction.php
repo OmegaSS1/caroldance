@@ -8,12 +8,12 @@ use App\Application\Actions\User\UserAction;
 use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
 
-class AdminUserRegister extends UserAction
+class UserAdminRegisterAction extends UserAction
 {
 
   protected function action(): Response
   {
-    $form = $this->validateForm($this->post($this->request));
+    $form = self::validateForm($this->post($this->request));
     $password_gen = $this->genPass();
 
     $form['telefone_whatsapp'] = preg_replace('/\D/', '', $form['whatsapp']);

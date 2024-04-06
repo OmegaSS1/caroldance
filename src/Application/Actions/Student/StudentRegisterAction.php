@@ -4,29 +4,37 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Student;
 
-use App\Domain\Student\StudentAlreadyRegisterException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
 
-class StudentRegister extends StudentAction
+class StudentRegisterAction extends StudentAction
 {
 
     protected function action(): Response
     {
 
-        $form = $this->post($this->request);
-
-        $this->validKeysForm($form, ["nome", "sobrenome", "dataNascimento", "cpf", "servicoAlunoId"]);
-        $form['cpf'] = $this->isCPF($form['cpf']);
+        $form = self::validateForm($this->post($this->request));
 
         $form['data_nascimento'] = $form['dataNascimento'];
         $form['servico_aluno_id'] = $form['servicoAlunoId'];
-        $years = $this->diffBetweenDatetimes(date('Y-m-d'), $form['data_nascimento'], 'y');
         unset($form['dataNascimento']);
         unset($form['servicoAlunoId']);
-        unset($form['csrf']);
 
-        if (!date_create($form['data_nascimento'])) {
+        $this->database->insert('aluno', $form);
+        $this->database->commit();
+        $this->logger->info("[Student - ID {$this->USER->data->id} IP ".IP."] - Aluno cadastrado com sucesso!", $form);
+
+        return $this->respondWithData();
+    }
+
+    private function validateForm(array $form): array{
+        $this->validKeysForm($form, ["nome", "sobrenome", "dataNascimento", "cpf", "servicoAlunoId"]);
+        $form['cpf'] = $this->isCPF($form['cpf']);
+
+        $years = $this->diffBetweenDatetimes(date('Y-m-d'), $form['dataNascimento'], 'y');
+        [$year, $month, $day] = explode('-', $form['dataNascimento']);
+
+        if (!checkdate((int)$month, (int)$day, (int)$year)) {
             $this->logger->error("[Student - ID {$this->USER->data->id} IP ".IP."] - A data de nascimento informada está inválida!", $form);
             throw new Exception('A data de nascimento informada está inválida!');
         } 
@@ -39,10 +47,6 @@ class StudentRegister extends StudentAction
             throw new Exception('Aluno já cadastrado!');
         }
 
-        $this->database->insert('aluno', $form);
-        $this->database->commit();
-        $this->logger->info("[Student - ID {$this->USER->data->id} IP ".IP."] - Aluno cadastrado com sucesso!", $form);
-
-        return $this->respondWithData();
+        return $form;
     }
 }

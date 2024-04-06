@@ -34,8 +34,8 @@ class ValidateTokenCSRFMiddleware implements Middleware
   {
     if ($request->getMethod() == 'POST') {
       $ip_request          = IP;
-      $form                = $request->getParsedBody();
-      $token_csrf          = $form['csrf'] ?? '';
+      $token_csrf          = $request->getCookieParams()['X-Csrf-Token'] ?? '';
+      $form                = json_decode(file_get_contents('php://input'), true) ?? [];
       $user_request        = $this->database->select('*', $this->table_black_list, "ip = '$ip_request'");
       $database_token_csrf = $this->database->select('token', $this->table_token_csrf, "token = '$token_csrf'", "ip = '$ip_request'");
 
@@ -76,12 +76,10 @@ class ValidateTokenCSRFMiddleware implements Middleware
 
       $this->database->commit();
 
-      unset($form['csrf']);
-      $request  = $request->withParsedBody($form);
       $response = $handler->handle($request);
-
       $this->database->delete('token_csrf', ["ip" => $ip_request]);
       $this->database->commit();
+
       return $response;
     }
     return $handler->handle($request);

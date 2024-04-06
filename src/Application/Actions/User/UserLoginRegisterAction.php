@@ -5,16 +5,15 @@ declare(strict_types=1);
 namespace App\Application\Actions\User;
 
 use App\Application\Actions\User\UserAction;
-use App\Domain\User\UserAlreadyRegisterException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
 
-class LoginUserRegister extends UserAction
+class UserLoginRegisterAction extends UserAction
 {
 
   protected function action(): Response
   {
-    $form = $this->validateForm($this->post($this->request));
+    $form = self::validateForm($this->post($this->request));
     
     $form['telefone_whatsapp'] = preg_replace('/\D/', '', $form['whatsapp']);
     $form['data_nascimento']   = $form['dataNascimento'];
@@ -37,7 +36,7 @@ class LoginUserRegister extends UserAction
     $form['cpf'] = $this->isCPF($form['cpf']);
     $form['email'] = $this->isEmail($form['email']);
 
-    $years = $this->diffBetweenDatetimes(date('Y-m-d'), $form['data_nascimento'], 'y');
+    $years = $this->diffBetweenDatetimes(date('Y-m-d'), $form['dataNascimento'], 'y');
     [$year, $month, $day] = explode('-', $form['dataNascimento']);
 
     if (!checkdate((int)$month, (int)$day, (int)$year)) {

@@ -12,7 +12,7 @@ use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
-class ChangePassword extends SigninAction
+class SigninChangePasswordAction extends SigninAction
 {
   use Helper;
   protected function action(): Response

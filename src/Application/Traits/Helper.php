@@ -87,12 +87,12 @@ trait Helper {
 		$token = bin2hex(random_bytes(32));
 		$table = 'token_csrf';
 
-    if(!!$this->database->select('token', $table, "ip = '$ip_request'"))
-      $this->database->update($table, ['token' => $token], "ip = '$ip_request'");
-    else
-      $this->database->insert($table, ['ip' => $ip_request, 'token' => $token]);
+		if(!!$this->database->select('token', $table, "ip = '$ip_request'"))
+			$this->database->update($table, ['token' => $token], "ip = '$ip_request'");
+		else
+			$this->database->insert($table, ['ip' => $ip_request, 'token' => $token]);
 
-    $this->database->commit();
+		$this->database->commit();
 
 		return $token;
 	}

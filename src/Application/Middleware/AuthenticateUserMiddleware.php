@@ -38,8 +38,10 @@ class AuthenticateUserMiddleware implements Middleware {
     $request = $request->withAttribute('USER', $decode_token);
 
     $tokenJWT = (new GenerateTokenJWTMiddleware($decode_token->iss, $decode_token->data->id))->getToken();
+    $tokenCSRF = $this->generateTokenCSRF(IP);
 
     return $handler->handle($request)
-    ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None");
+    ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None")
+    ->withAddedHeader('Set-Cookie', "X-Csrf-Token=$tokenCSRF; Path=/; HttpOnly; Secure; SameSite=None");
   }
 }

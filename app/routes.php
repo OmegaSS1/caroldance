@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Actions\Signin\{ChangePassword, LinkForgotPassword, Signin};
-use App\Application\Actions\User\{ListUsersAction, ViewUserAction, LoginUserRegister, AdminUserRegister};
-use App\Application\Actions\Student\{StudentRegister};
+use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
+use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction};
+use App\Application\Actions\Student\{StudentRegisterAction};
 
 use App\Application\Services\Google\GoogleOAuth;
 use App\Application\Services\Facebook\FacebookOAuth;
@@ -36,20 +36,20 @@ return function (App $app) {
     $app->group('/caroldance', function (Group $group) {
 
         $group->group('/signin', function (Group $group) {
-            $group->post('', Signin::class);
-            $group->post('/register', LoginUserRegister::class);
-            $group->post('/linkForgotPassword', LinkForgotPassword::class);
-            $group->post('/changePassword', ChangePassword::class);
+            $group->post('', SigninLoginAction::class);
+            $group->post('/register', UserLoginRegisterAction::class);
+            $group->post('/linkForgotPassword', SigninLinkForgotPasswordAction::class);
+            $group->post('/changePassword', SigninChangePasswordAction::class);
         });
 
         $group->group('/user', function (Group $group) {
-            $group->post('', ListUsersAction::class);
-            $group->post('/{id}', ViewUserAction::class);
+            $group->post('', UserListAction::class);
+            $group->post('/{id}', UserViewAction::class);
         })->add(AuthenticateUserMiddleware::class);
 
         $group->group('/admin', function (Group $group) {
-            $group->post('/register/student', StudentRegister::class);
-            $group->post('/register/user', AdminUserRegister::class);
+            $group->post('/register/student', StudentRegisterAction::class);
+            $group->post('/register/user', UserAdminRegisterAction::class);
             // $group->post('/{id}', ViewUserAction::class);
         });
         // ->add(AuthenticateUserMiddleware::class);
