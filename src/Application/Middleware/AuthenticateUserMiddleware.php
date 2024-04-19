@@ -17,7 +17,8 @@ use Firebase\JWT\Key;
 class AuthenticateUserMiddleware implements Middleware {
 
   use Helper;
-  private DatabaseInterface $database;
+  private DatabaseInterface $database;	
+  private string $table_token_csrf = "token_csrf";
 	private string $table = "usuario";
   private string $column = "id";
 
@@ -27,13 +28,33 @@ class AuthenticateUserMiddleware implements Middleware {
     $this->logger = $logger;
   }
   public function process(Request $request, RequestHandler $handler): Response{
-
-    $token = $request->getCookieParams()['Authorization'] ?? '';
+    $token        = $request->getCookieParams()['Authorization'] ?? '';
     $decode_token = JWT::decode($token, new Key(ENV['SECRET_KEY_JWT'], 'HS256'));
-    $user = $this->database->select('id', $this->table, "{$this->column} = '{$decode_token->data->id}'", "status = 1");
+    $user         = $this->database->select('id', $this->table, "{$this->column} = '{$decode_token->data->id}'", "status = 1");
+    $logInfo      = [
+      "User"     => $decode_token->data->id ?? "Usuário não logado",
+      "Ip"       => IP,
+      "Method"   => $request->getMethod(),
+      "Route"    => $request->getUri()->getPath(),
+      "Response" => "Sessão Expirada! Faça login novamente!"
+    ];
 
-    if($decode_token->iss != IP) throw new ExpiredTokenException($request, $this->database);
-    else if(empty($user)) throw new ExpiredTokenException($request, $this->database);
+    if($decode_token->iss != IP) {
+      $this->database->delete($this->table_token_csrf, ["ip" => IP]);
+      $this->database->commit();
+      $request = $request->withHeader('Set-Cookie', '');
+
+      $this->logger->warning(json_encode($logInfo, JSON_UNESCAPED_UNICODE), $user ?? $token ?? []);
+      throw new ExpiredTokenException();
+    }
+    else if(empty($user)){
+      $this->database->delete($this->table_token_csrf, ["ip" => IP]);
+      $this->database->commit();
+      $request = $request->withHeader('Set-Cookie', '');
+      
+      $this->logger->warning(json_encode($logInfo, JSON_UNESCAPED_UNICODE), $user ?? $token ?? []);
+      throw new ExpiredTokenException();
+    } 
 
     $request = $request->withAttribute('USER', $decode_token);
 

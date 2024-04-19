@@ -8,5 +8,5 @@ use App\Domain\DomainException\DomainRecordNotFoundException;
 
 class ResponsibleNotFoundException extends DomainRecordNotFoundException
 {
-    public $message = 'O responsável não foi localizado';
+    public $message = '[Responsible (NOTFOUND)] - O responsável não foi localizado';
 }

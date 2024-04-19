@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Signin;
 
 use App\Application\Middleware\GenerateTokenJWTMiddleware;
+use App\Domain\DomainException\CustomDomainException;
 use App\Domain\User\UserNotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
@@ -24,7 +25,7 @@ class SigninLinkForgotPasswordAction extends SigninAction
     $this->sendMail(EMAIL_TITLE_FORGOT_PASSWORD, $body, [$form['email']]);
 
     $this->database->commit();
-    $this->logger->alert("[LinkForgotPassword - IP " . IP . "] Solicitação de troca de senha!", $form);
+    $this->logger->alert("Solicitação de troca de senha!", $form);
 
     return $this->respondWithData();
   }
@@ -37,12 +38,10 @@ class SigninLinkForgotPasswordAction extends SigninAction
     $user = $this->userRepository->findUserByEmail($form['email']);
 
     if(!$user){
-      $this->logger->error("[Signin - IP " . IP . "] - Usuário não cadastrado!", $form);
-      throw new UserNotFoundException('Usuário e/ou senha inválidos!');
+      throw new CustomDomainException('Usuário e/ou senha inválidos!');
     }
     else if(!$user->getStatus()){
-      $this->logger->error("[Signin - IP " . IP . "] - Usuário inativo!", $form);
-      throw new Exception('Usuário inativo! Em caso de duvidas, entre em contato com o suporte.');
+      throw new CustomDomainException('Usuário inativo! Em caso de duvidas, entre em contato com o suporte.');
     }
 
     return $form;

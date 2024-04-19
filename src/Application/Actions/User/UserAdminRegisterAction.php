@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\User;
 
 use App\Application\Actions\User\UserAction;
+use App\Domain\DomainException\CustomDomainException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
 
@@ -16,6 +17,8 @@ class UserAdminRegisterAction extends UserAction
     $form = self::validateForm($this->post($this->request));
     $password_gen = $this->genPass();
 
+    $form['nome']              = ucfirst($form['nome']);
+    $form['sobrenome']         = ucfirst($form['sobrenome']);
     $form['telefone_whatsapp'] = preg_replace('/\D/', '', $form['whatsapp']);
     $form['data_nascimento']   = $form['dataNascimento'];
     $form['perfil_usuario_id'] = $form['perfil'];
@@ -33,34 +36,29 @@ class UserAdminRegisterAction extends UserAction
 
     $this->database->commit();
 
-    $this->logger->info("[Register - ID {$this->USER->data->id} IP " . IP . "] - Usuario cadastrado com sucesso!", $form);
     return $this->respondWithData();
   }
 
   private function validateForm(array $form): array
   {
     $this->validKeysForm($form, ['nome', 'sobrenome', 'email', 'whatsapp', 'cpf', 'dataNascimento', 'perfil', 'senha', 'confirmarSenha']);
-    $form['cpf'] = $this->isCPF($form['cpf']);
+    $form['cpf']   = $this->isCPF($form['cpf']);
     $form['email'] = $this->isEmail($form['email']);
 
     $years = $this->diffBetweenDatetimes(date('Y-m-d'), $form['dataNascimento'], 'y');
     [$year, $month, $day] = explode('-', $form['dataNascimento']);
 
-    if (!checkdate((int)$month, (int)$day, (int)$year)) {
-      $this->logger->error("[Register - ID {$this->USER->data->id} IP " . IP . "] - A data de nascimento informada está inválida!", $form);
-      throw new Exception('A data de nascimento informada está inválida!');
+    if (!checkdate((int) $month, (int) $day, (int) $year)) {
+      throw new CustomDomainException('A data de nascimento informada está inválida!');
     } 
     else if ($years < 18 or $years > 125) {
-      $this->logger->error("[Register - ID {$this->USER->data->id} IP " . IP . "] - O usuário precisa ter entre 18 e 125 anos!", $form);
-      throw new Exception('O usuário precisa ter entre 18 e 125 anos!');
+      throw new CustomDomainException('O usuário precisa ter entre 18 e 125 anos!');
     } 
     else if (!!$this->userRepository->findUserByCpf($form['cpf'])) {
-      $this->logger->error("[Register - ID {$this->USER->data->id} IP " . IP . "] - Usuário já cadastrado!", $form);
-      throw new Exception('Usuário já cadastrado!');
+      throw new CustomDomainException('Usuário já cadastrado!');
     } 
     else if (strlen($form['whatsapp']) < 10 or strlen($form['whatsapp']) > 12) {
-      $this->logger->error("[Register - ID {$this->USER->data->id} IP " . IP . "] - Whatsapp inválido!", $form);
-      throw new Exception('O telefone whatsapp está invalido!');
+      throw new CustomDomainException('O telefone whatsapp está invalido!');
     }
 
     return $form;

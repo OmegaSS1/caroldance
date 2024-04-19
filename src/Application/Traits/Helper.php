@@ -6,16 +6,19 @@ namespace App\Application\Traits;
 
 use App\Application\Actions\Signin\SigninException;
 use App\Database\DatabaseInterface;
+use App\Domain\DomainException\CustomDomainException;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\UploadedFileInterface;
 use Slim\Psr7\Response as newResponse;
+use Slim\Psr7\Stream;
 use Slim\Routing\RouteContext;
 use Datetime;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception as PHPMailerException;
+
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -23,9 +26,15 @@ use PhpOffice\PhpSpreadsheet\Writer\Xls;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Reader\Html;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+
+use Box\Spout\Writer\Common\Creator\WriterEntityFactory;
+use Box\Spout\Writer\Common\Creator\Style\StyleBuilder;
+
 use ZipArchive;
+
 use Dompdf\Dompdf;
 use Dompdf\Options;
+
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
@@ -44,7 +53,8 @@ use MercadoPago\Item;
 use MercadoPago\Preference;
 
 
-trait Helper {
+trait Helper
+{
 
 	/**
 	 * Remove toda tag de sql.
@@ -57,10 +67,10 @@ trait Helper {
 		$search = array('create', 'insert into', 'select', 'update', 'delete', 'where', ' and ', ' or ', ' not ', 'order', 'limit', 'group', 'by', 'inner', 'join', ' on ', 'union', 'min ', 'max', 'like', '[*]', 'from', '<', '>', 'script', 'svg', 'onload');
 		foreach ($search as $s) {
 			foreach ($form as $key => $value) {
-				if(is_string($value)){
+				if (is_string($value)) {
 					preg_match("/$s/i", $value, $matches);
 					if (!empty($matches)) {
-						$this->logger->warning("[Helper - (removeSQLInjection) ID {$this->USER->data->id} IP ".IP."] Tentativa de SQLInjection!", [$value]);
+						$this->logger->warning("[Helper - (removeSQLInjection) ID {$this->USER->data->id} IP " . IP . "] Tentativa de SQLInjection!", [$value]);
 						$value = str_replace($matches[0], '', $value);
 					}
 					$form[$key] = trim(preg_replace("/\s+/", ' ', $value));
@@ -70,24 +80,30 @@ trait Helper {
 		return $form;
 	}
 
-	public function validKeysForm(array $form, array $keys){
+	public function validKeysForm(array $form, array $keys)
+	{
 		foreach ($keys as $k) {
 			if (!isset($form[$k])) {
-				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP ".IP."] Parametros incompletos!", $form);
-				throw new Exception("É obrigatório informar o campo ".strtoupper($k));
-			}
-			else if ($form[$k] == "") {
-				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP ".IP."] Parametros incompletos!", $form);
-				throw new Exception("É obrigatório informar o campo ".strtoupper($k));
+				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP " . IP . "] Parametros incompletos!", $form);
+				throw new Exception("É obrigatório informar o campo " . strtoupper($k));
+			} else if ($form[$k] == "") {
+				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP " . IP . "] Parametros incompletos!", $form);
+				throw new Exception("É obrigatório informar o campo " . strtoupper($k));
+			} else if (is_float($form[$k]) or is_int($form[$k])) {
+				if ($form[$k] < 0) {
+					$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP " . IP . "] Parametros incompletos!", $form);
+					throw new Exception("O valor do campo " . strtoupper($k) . " não pode ser menor que 0");
+				}
 			}
 		}
 	}
 
-	public function generateTokenCSRF(string $ip_request): string{
+	public function generateTokenCSRF(string $ip_request): string
+	{
 		$token = bin2hex(random_bytes(32));
 		$table = 'token_csrf';
 
-		if(!!$this->database->select('token', $table, "ip = '$ip_request'"))
+		if (!!$this->database->select('token', $table, "ip = '$ip_request'"))
 			$this->database->update($table, ['token' => $token], "ip = '$ip_request'");
 		else
 			$this->database->insert($table, ['ip' => $ip_request, 'token' => $token]);
@@ -97,38 +113,42 @@ trait Helper {
 		return $token;
 	}
 
-	public function sendWPPMessage(){
-		
+	public function sendWPPMessage()
+	{
+
 		$url = "https://graph.facebook.com/v18.0/110748565214335/messages";
 		$body = [
-			"messaging_product" => "whatsapp", 
+			"messaging_product" => "whatsapp",
 			"to" => "5511983856319",
 			"type" => "image",
 			"image" => [
 				"link" => "https://h-simcepi.smsprefeiturasp.com.br/appteste/teste"
-			] 
+			]
 			// "template" => [
-				// "name" => "hello_world", 
-				// "language" => [
-					// "code" => "en_US"
-				// ],
+			// "name" => "hello_world", 
+			// "language" => [
+			// "code" => "en_US"
+			// ],
 			// ]
 		];
 
 		$curl_options = array(
-			CURLOPT_URL =>  $url,
+			CURLOPT_URL => $url,
 			CURLOPT_HTTPHEADER => [
-				"Authorization: Bearer ".ENV['WHATSAPP_TOKEN'],
+				"Authorization: Bearer " . ENV['WHATSAPP_TOKEN'],
 				"Content-Type: application/json"
 			],
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_POSTFIELDS => json_encode($body)
-		);		
+		);
 		$ch = curl_init();
 		curl_setopt_array($ch, $curl_options);
-		
+
 		$response = curl_exec($ch);
-		if( !$response ) { die("Error: " . curl_error($ch)); };
+		if (!$response) {
+			die("Error: " . curl_error($ch));
+		}
+		;
 
 		return $response;
 	}
@@ -154,7 +174,6 @@ trait Helper {
 	 * days  Retorna a diferença total em dias.
 	 */
 	public function diffBetweenDatetimes(string $min, string $max, string $type = '')
-
 	{
 		$min = new Datetime($min);
 		$max = new Datetime($max);
@@ -187,7 +206,8 @@ trait Helper {
 				default:
 					return $diff;
 			}
-		}else return "";
+		} else
+			return "";
 	}
 
 	/**
@@ -195,7 +215,8 @@ trait Helper {
 	 * @param string $value
 	 * @return string
 	 */
-	public function format_string(string $value): string {
+	public function format_string(string $value): string
+	{
 		return preg_replace(array("//", "/á|à|ã|â|ä/", "/(Á|À|Ã|Â|Ä)/", "/(é|è|ê|ë)/", "/(É|È|Ê|Ë)/", "/(í|ì|î|ï)/", "/(Í|Ì|Î|Ï)/", "/(ó|ò|õ|ô|ö)/", "/(Ó|Ò|Õ|Ô|Ö)/", "/(ú|ù|û|ü)/", "/(Ú|Ù|Û|Ü)/", "/(ñ)/", "/(Ñ)/", "/(ç)/"), explode(" ", " a A e E i I o O u U n N c"), $value);
 	}
 
@@ -205,11 +226,14 @@ trait Helper {
 	 * @return string
 	 * @throws Exception 
 	 */
-	public function isCPF(string $cpf): string{
-		if (empty($cpf) or strlen($cpf) < 11) throw new Exception('O CPF informado está inválido!');
-		else if (preg_match('/(\d)\1{10}/', $cpf)) throw new Exception('O CPF informado está inválido!');
+	public function isCPF(string $cpf): string
+	{
+		if (empty($cpf) or strlen($cpf) < 11)
+			throw new Exception('O CPF informado está inválido!');
+		else if (preg_match('/(\d)\1{10}/', $cpf))
+			throw new Exception('O CPF informado está inválido!');
 		$cpf = preg_replace('/\D/', '', (string) $cpf);
-		
+
 
 		$validacao = substr($cpf, 0, 9);
 
@@ -224,7 +248,8 @@ trait Helper {
 			$validacao .= $soma % 11 > 1 ? 11 - ($soma % 11) : 0;
 		}
 
-		if ($validacao != $cpf) throw new Exception('O CPF informado está inválido!');
+		if ($validacao != $cpf)
+			throw new Exception('O CPF informado está inválido!');
 		return $cpf;
 	}
 
@@ -234,14 +259,16 @@ trait Helper {
 	 * @return string
 	 * @throws Exception 
 	 */
-	public function isCNPJ(string $cnpj): string{
-		if (strlen($cnpj) != 14) throw new Exception('O CNPJ informado está inválido!', 400);
-		else if (preg_match('/(\d)\1{13}/', $cnpj)) throw new Exception('O CNPJ informado está inválido!');
+	public function isCNPJ(string $cnpj): string
+	{
+		if (strlen($cnpj) != 14)
+			throw new Exception('O CNPJ informado está inválido!', 400);
+		else if (preg_match('/(\d)\1{13}/', $cnpj))
+			throw new Exception('O CNPJ informado está inválido!');
 		$cnpj = preg_replace('/\D/', '', (string) $cnpj);
 
 		// Valida primeiro dígito verificador
-		for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++)
-		{
+		for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++) {
 			$soma += $cnpj[$i] * $j;
 			$j = ($j == 2) ? 9 : $j - 1;
 		}
@@ -249,20 +276,20 @@ trait Helper {
 		$resto = $soma % 11;
 
 		if ($cnpj[12] != ($resto < 2 ? 0 : 11 - $resto))
-			throw new Exception('O CNPJ informado está inválido!', 400);;
+			throw new Exception('O CNPJ informado está inválido!', 400);
+		;
 
 		// Valida segundo dígito verificador
-		for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++)
-		{
+		for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++) {
 			$soma += $cnpj[$i] * $j;
 			$j = ($j == 2) ? 9 : $j - 1;
 		}
 
 		$resto = $soma % 11;
 
-		if($cnpj[13] != ($resto < 2 ? 0 : 11 - $resto))
+		if ($cnpj[13] != ($resto < 2 ? 0 : 11 - $resto))
 			throw new Exception('O CNPJ informado está inválido!', 400);
-		
+
 		return $cnpj;
 	}
 
@@ -271,10 +298,13 @@ trait Helper {
 	 * @return string
 	 * @throws Exception
 	 */
-	public function isEmail(string $email): string{
-		if (empty($email)) throw new Exception('O EMAIL informado está inválido!');
-		else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Exception('O EMAIL informado está inválido!');
-		
+	public function isEmail(string $email): string
+	{
+		if (empty($email))
+			throw new Exception('O EMAIL informado está inválido!');
+		else if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+			throw new Exception('O EMAIL informado está inválido!');
+
 		return filter_var($email, FILTER_SANITIZE_EMAIL);
 	}
 	// /**
@@ -382,7 +412,7 @@ trait Helper {
 	// 			if (empty($val) or strlen($val) < 11) throw new Exception('CPF inválido!', 400);
 	// 			if (preg_match('/(\d)\1{10}/', $val)) throw new Exception('CPF inválido!', 400);
 	// 			$cpf = preg_replace('/\D/', '', $val);
-				
+
 
 	// 			$validacao = substr($cpf, 0, 9);
 
@@ -441,7 +471,7 @@ trait Helper {
 
 	// 			if($cnpj[13] != ($resto < 2 ? 0 : 11 - $resto))
 	// 				throw new Exception('O CNPJ informado está inválido!', 400);
-				
+
 	// 			break;
 	// 			// $validacao = substr($cnpj, 0, 12);
 
@@ -551,11 +581,16 @@ trait Helper {
 	 * @return true or exception.
 	 */
 	public function sendMail(
-		string $title, string $message, 
-		array $recipient, array $cc = [], array $cco = [], 
-		bool $includeAttachment = false, array $attachmentPath = [],
-		bool $includeImage = false, string $imagePath = "")
-	{
+		string $title,
+		string $message,
+		array $recipient,
+		array $cc = [],
+		array $cco = [],
+		bool $includeAttachment = false,
+		array $attachmentPath = [],
+		bool $includeImage = false,
+		string $imagePath = ""
+	) {
 		$mail = new PHPMailer(true);
 
 		# SMTP settings
@@ -564,21 +599,21 @@ trait Helper {
 		// $mail->SMTPDebug = SMTP::DEBUG_SERVER;
 
 		## Config GMAIL
-		$mail->Host				= ENV['EMAIL_HOST'];
-		$mail->SMTPAuth			= ENV['EMAIL_SMTP_AUTH'];
-		$mail->Username			= ENV['EMAIL_USERNAME'];
-		$mail->Password			= ENV['EMAIL_PASSWORD'];
-		$mail->SMTPAutoTLS		= ENV['EMAIL_SMTP_AUTO_TLS'];
-		$mail->SMTPSecure 		= ENV['EMAIL_SMTP_SECURE'];
-		$mail->Port				= ENV['EMAIL_PORT'];
+		$mail->Host = ENV['EMAIL_HOST'];
+		$mail->SMTPAuth = ENV['EMAIL_SMTP_AUTH'];
+		$mail->Username = ENV['EMAIL_USERNAME'];
+		$mail->Password = ENV['EMAIL_PASSWORD'];
+		$mail->SMTPAutoTLS = ENV['EMAIL_SMTP_AUTO_TLS'];
+		$mail->SMTPSecure = ENV['EMAIL_SMTP_SECURE'];
+		$mail->Port = ENV['EMAIL_PORT'];
 		$mail->setFrom(ENV['EMAIL_SET_FROM']);
 
-		foreach($recipient as $r)
+		foreach ($recipient as $r)
 			$mail->addAddress(strtolower($r));
 
-		foreach ($cc as $rec) 
+		foreach ($cc as $rec)
 			$mail->addCC(strtolower($rec));
-		
+
 		foreach ($cco as $rec)
 			$mail->addBCC(strtolower($rec));
 
@@ -586,49 +621,40 @@ trait Helper {
 		$mail->isHTML(true);
 		$mail->Subject = $title;
 
-		if($includeAttachment){
-			foreach($attachmentPath as $attachment)
+		if ($includeAttachment) {
+			foreach ($attachmentPath as $attachment)
 				$mail->addAttachment($attachment);
 		}
 
-		if($includeImage){
+		if ($includeImage) {
 			$mail->AddEmbeddedImage($imagePath, 'image');
-			$mail->Body    = "<img src='cid:image'> <br><br>" . $message;
-		}
-		else
+			$mail->Body = "<img src='cid:image'> <br><br>" . $message;
+		} else
 			$mail->Body = $message;
 
 		try {
 			$mail->send();
 			return true;
 		} catch (PHPMailerException $e) {
-			$this->logger->error("[Helper - ID {$this->USER->data->id} IP ".IP."]", ["message" => $e->getMessage(), "code" => $e->getCode(), "file" => $e->getFile(), "line" => $e->getLine()]);
+			$this->logger->error("[Helper - ID {$this->USER->data->id} IP " . IP . "]", ["message" => $e->getMessage(), "code" => $e->getCode(), "file" => $e->getFile(), "line" => $e->getLine()]);
 			throw new PHPMailerException('Erro ao tentar enviar o email! Tente novamente mais tarde.', 400);
 		}
 	}
 
-	// /**
-	//  * Função para retornar arquivos com middleware
-	//  * @return StreamInterface
-	//  */
-	// public static function outputFile($file): StreamInterface{
-	// 	$stream = fopen($file, 'r+');
-	// 	unlink($file);
+	/**
+	 * @param string $file
+	 * @return StreamInterface
+	 */
+	private static function streamFile(string $file): StreamInterface
+	{
+		$stream = fopen($file, 'r+');
+		unlink($file);
 
-	// 	return new \Slim\Psr7\Stream($stream);
-	// }
+		if ($stream === false)
+			throw new CustomDomainException('[Helper (OUTPUTFILE)] - Erro ao tentar abrir o arquivo.');
 
-	// public static function success(string $message){
-	// 	if(DB::$transaction)
-	// 		foreach(DB::$transaction as $t) $t->commit(); // Faz commit nas transações em caso de sucesso total
-	// 	return array("message" => $message, "code" => 200);
-	// }
-
-	// public static function commit_database(){
-	// 	foreach(DB::$transaction as $t) $t->commit(); // Faz commit nas transações em caso de sucesso total
-	// 	DB::$transaction = [];
-	// 	return true;
-	// }
+		return new Stream($stream);
+	}
 
 	// /**
 	//  * Retorna o ultimo erro da aplicação.
@@ -727,77 +753,6 @@ trait Helper {
 	// }
 
 	// /**
-	//  * Retorna as permissões do usuário logado
-	//  *
-	//  * @return array
-	//  */
-	// public static function userPermission(Request $request, Response $response): Response
-	// {
-	// 	try {
-	// 		if ($request->hasHeader('Authorization')) {
-
-	// 			$USER = $request->getAttribute('USER');
-
-	// 			if(array_key_exists('authorization', $request->getHeaders()))
-	// 				$token  = $request->getHeaders()['authorization'][0];
-	// 			else 
-	// 				$token = $request->getHeaders()['Authorization'][0];
-
-	// 			$decode_token = JWT::decode($token, new Key(ENV['SECRET_KEY_JWT'], 'HS256'));
-
-	// 			$sql = "SELECT perm.*, p.aceite_termo, p.nome, tus.perm_aditamento perm_aditamento_unidade, ie.perm_aditamento perm_aditamento_instituicao
-	// 				FROM tb_permissao perm
-	// 				LEFT JOIN tb_profissional p ON p.id = id_tb_profissional
-	// 				LEFT JOIN tb_unidade_saude tus ON tus.id = $USER->id_tb_unidade_saude
-	// 				LEFT JOIN tb_instituicao_ensino ie ON ie.id = $USER->id_tb_instituicao_ensino
-	// 				WHERE id_tb_profissional = (
-	// 					SELECT id
-	// 					FROM tb_profissional
-	// 					WHERE cpf = '$decode_token->aud'
-	// 				)";
-
-	// 			$perm = DB::runSelect($sql);
-	// 			if (empty($perm)) throw new Exception('Falha ao verificar usuário, faça login novamente!', 498);
-
-	// 			$nome = $perm[0]['nome'];
-	// 			$aceite_termo = $perm[0]['aceite_termo'];
-
-	// 			//Verifica se expirou o tempo da permissao
-	// 			$exp_permission = DB::select('permissao, validade_inicio, validade_fim', 'tb_validade_permissao');
-	// 			foreach ($exp_permission as $v) {
-	// 				if(!empty($v['validade_inicio']))
-	// 					if(date('Y-m-d') < $v['validade_inicio']) unset($perm[0][$v['permissao']]);
-					
-	// 				if(!empty($v['validade_fim']))
-	// 					if(date('Y-m-d') > $v['validade_fim']) unset($perm[0][$v['permissao']]);
-	// 			}
-
-	// 			foreach ($perm[0] as $k => $v)
-	// 				if ($v == 0)
-	// 					unset($perm[0][$k]);
-
-	// 			unset($perm[0]['id']);
-	// 			unset($perm[0]['id_tb_profissional']);
-	// 			unset($perm[0]['criado_em']);
-				
-	// 			$perm[0]['termo'] = $aceite_termo;
-	// 			$perm[0]['nome']  = $nome;
-				
-	// 			$content = $perm[0];
-	// 		} else throw new Exception('Missing Header Authorization!', 498);
-
-	// 		## Response
-	// 		$response->getBody()->write(json_encode($content, JSON_UNESCAPED_UNICODE));
-	// 		return $response->withStatus(200);
-	// 	} catch (Exception $e) {
-	// 		$content = $e->getMessage();
-	// 		return Helper::error($e);
-	// 	} finally {
-	// 		Helper::logUser($request, $content);
-	// 	}
-	// }
-
-	// /**
 	//  * Retorna o conteúdo do arquivo.
 	//  * Formatos aceitos: XLS, XLSX, CSV
 	//  *
@@ -819,18 +774,67 @@ trait Helper {
 	// 	}
 	// }
 
+	/**
+	 * @param array $data
+	 * @param string $filename
+	 * @param string $extension
+	 * @param Response $response
+	 * @param string $output 'F' return File, 'D' return download Browser
+	 * @return Response
+	 */
+	public function BoxSpout(array $data, string $filename, string $extension, Response $response, string $output = 'D'): Response
+	{
+		switch ($extension) {
+			case 'xlsx':
+				$writer = WriterEntityFactory::createXLSXWriter();
+				$defaultStyle = (new StyleBuilder())
+					->setFontName('Arial')
+					->setFontSize(11)
+					->build();
+				$writer->setDefaultRowStyle($defaultStyle);
+				break;
+			case 'csv':
+				$writer = WriterEntityFactory::createCSVWriter();
+				$writer->setShouldAddBOM(true);
+				$writer->setFieldDelimiter(';');
+				$writer->setFieldEnclosure('"');
+				break;
+		}
+		$filename     = pathinfo($filename, PATHINFO_FILENAME) . '.' . $extension;
+		$tempFilename = tempnam(sys_get_temp_dir(), pathinfo($filename, PATHINFO_FILENAME)) . '.' . $extension;
+		$writer->openToFile($tempFilename);
 
-	// /**
-	//  * Retorna um arquivo no formato desejado. Formatos aceitos XLS, XLSX, TSV, CSV, PDF
-	//  *
-	//  * @param array $data Conteúdo para popular o arquivo.
-	//  * @param string $filename Nome do arquivo.
-	//  * @param string $extension Tipo de extensao do arquivo. Exemplo 'xls'
-	//  * @param string $path
-	//  * [optional]
-	//  * Por padrão iŕa salvar na raiz do projeto.
-	//  * @return file
-	//  */
+		foreach ($data as $key => $content) {
+			$values = array_values($content);
+			$rowFromValues = WriterEntityFactory::createRowFromArray($values);
+			$writer->addRow($rowFromValues);
+		}
+
+		$writer->close();
+		
+		$stream = self::streamFile($tempFilename);
+
+		if($output == 'F')
+			return $response->withBody($stream);
+		
+		else if($output == 'D')
+			return $response
+			->withBody($stream)
+			->withHeader('Content-Type', 'application/octet-stream')
+			->withHeader('Content-Disposition', 'attachment; filename="' . basename($filename) . '"');
+	}
+
+	/**
+	 * Retorna um arquivo no formato desejado. Formatos aceitos XLS, XLSX, TSV, CSV, PDF
+	 *
+	 * @param array $data Conteúdo para popular o arquivo.
+	 * @param string $filename Nome do arquivo.
+	 * @param string $extension Tipo de extensao do arquivo. Exemplo 'xls'
+	 * @param string $path
+	 * [optional]
+	 * Por padrão iŕa salvar na raiz do projeto.
+	 * @return file
+	 */
 	// public static function createFile(array $data, string $filename, string $extension)
 	// {
 	// 	#Exemplo de como enviar os dados
@@ -884,12 +888,12 @@ trait Helper {
 	// 			$dompdf->setPaper('A4', 'landscape');
 	// 			$dompdf->render();
 	// 			$dompdf->stream("$filename");
-	// 			#DOWNLOAD
-	// 			// $dompdf->stream();
+	// 		#DOWNLOAD
+	// 		// $dompdf->stream();
 
-	// 			#APARECE NA ABA DO NAVEGADOR
-	// 			// header('Content-type: application/pdf');
-	// 			// echo $dompdf->output();
+	// 		#APARECE NA ABA DO NAVEGADOR
+	// 		// header('Content-type: application/pdf');
+	// 		// echo $dompdf->output();
 
 	// 	}
 	// }
@@ -917,7 +921,7 @@ trait Helper {
 	// 	$sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
 	// 	foreach(range('A', 'Z') as $column)
 	// 		$sheet->getColumnDimension($column)->setAutoSize(true);
-		
+
 	// 	if($img){
 	// 		$drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
 	// 		$drawing->setName(isset($imgOptions['name']) ? $imgOptions['name'] : '');
@@ -938,9 +942,9 @@ trait Helper {
 	// 	$writer->save($filename);
 	// }
 
-	// /**
-	//  * Metodo dinamico responsavel por exportar os dados em arquivos
-	//  */
+	/**
+	 * Metodo dinamico responsavel por exportar os dados em arquivos
+	 */
 	// public static function exportFile(Request $request, Response $response, array $args)
 	// {
 	// 	try {
@@ -964,58 +968,6 @@ trait Helper {
 	// }
 
 	// /**
-	//  * Metodo dinamico responsavel por exportar os dados de contrapartida
-	//  */
-	// public static function exportContrapartida(Request $request, Response $response, array $args)
-	// {
-	// 	try {
-
-	// 		// $data = [];
-	// 		// $unidades = '';
-
-	// 		// $data['institution'] = $args['instituicao'];
-
-	// 		// if($args['sts'] != 0) {
-	// 		// 	$sts = DB::select('id, nome', 'tb_unidade_saude', "id_pai = '{$args['sts']}'");
-
-	// 		// 	foreach($sts as $s) {
-	// 		// 		$unidades .= $s['id'].',';
-	// 		// 	}
-	// 		// }elseif($args['crs'] != 0) {
-	// 		// 	$crs = DB::select('id, nome', 'tb_unidade_saude', "id_pai = '{$args['crs']}'");
-
-	// 		// 	foreach($crs as $c) {
-					
-	// 		// 		$sts = DB::select('id, nome', 'tb_unidade_saude', "id_pai = '{$c['id']}'");
-
-	// 		// 		foreach($sts as $s) {
-	// 		// 			$unidades .= $s['id'].',';
-	// 		// 		}
-	// 		// 	}
-	// 		// }
-
-	// 		// $data['unidades'] = substr($unidades, 0, -1);
-
-	// 		#Pega as configurações
-	// 		// $config = Query::exportContrapartida($data);
-	// 		$config = Query::exportContrapartida($args);
-
-	// 		// #Roda a query
-	// 		$content = DB::runSelect($config);
-	// 		if(!empty($content)) array_unshift($content, array_keys($content[0]));
-
-	// 		$filename = "Relatorio de Contrapartida - " . date('Y-m-d H:i:s') . '.xlsx';
-	// 		Helper::createFile($content, $filename, 'xlsx');
-
-	// 		return $response->withBody(self::outputFile($filename))->withStatus(200);
-	// 		// $response->getBody()->write(json_encode('teste', JSON_UNESCAPED_UNICODE));
-	// 		// return $response->withStatus(200);
-	// 	} catch (Exception $e) {
-	// 		return Helper::error($e);
-	// 	}
-	// }
-
-	// /**
 	//  * Envia uma solicitação para a api do google
 	//  *
 	//  * @param string $token Recebe o token para validar.
@@ -1026,7 +978,7 @@ trait Helper {
 
 	// 	$secretKey = ENV['SECRET_KEY_RECAPTCHAV3'];
 	// 	$url = "https://www.google.com/recaptcha/api/siteverify?secret=$secretKey&response=$token";
-		
+
 	// 	#Inicia o curl
 	// 	$init = curl_init($url);
 
@@ -1048,14 +1000,14 @@ trait Helper {
 	// 	return Helper::success('OK');
 	// }
 
-	// /**
-	//  * Retorna o pdf para download
-	//  * @param string $html HTML do conteúdo
-	//  * @param string $filename Nome do arquivo
-	//  * @param bool $browser Retorna no navegador ou como download (true or false)
-	//  * @return Dompdf 
-	//  */
-	// public static function PDF(string $html, string $filename, bool $browser, string $orientation = 'landscape', string $font = 'Arial')
+	/**
+	 * Retorna o pdf para download
+	 * @param string $html HTML do conteúdo
+	 * @param string $filename Nome do arquivo
+	 * @param bool $browser Retorna no navegador ou como download (true or false)
+	 * @return Dompdf 
+	 */
+	// public static function DOMPDF(string $html, string $filename, bool $browser = false, string $orientation = 'landscape', string $font = 'Arial')
 	// {
 	// 	$filename = pathinfo($filename, PATHINFO_FILENAME) . '.pdf';
 	// 	$options = new Options();
@@ -1089,23 +1041,26 @@ trait Helper {
 	 * @param string $filename Nome do arquivo
 	 * @param string $dest ino Destino da conversão ("F" - Salvar diretamente na raiz do projeto, "D" - Download forçado no browser)
 	 */
-	public function MPDF(string $html, string $filename, string $orientation = 'P', $dest = 'F'){
+	public function MPDF(string $html, string $filename, string $orientation = 'P', $dest = 'F')
+	{
+		$filename = pathinfo($filename, PATHINFO_FILENAME) . '.pdf';
 		$mpdf = new Mpdf([
-			'mode' => 'utf-8', 
+			'mode' => 'utf-8',
 			'orientation' => $orientation,
 			'format' => "A4-$orientation",
 			'simpleTables' => true,
 			'packTableData' => true
 		]);
+
 		$totalLength = strlen($html);
 		$limitBacktrace = (int) ini_get('pcre.backtrack_limit');
-		if($totalLength > $limitBacktrace){
-			for($offset=0; $offset < $totalLength; $offset += $limitBacktrace){
+
+		if ($totalLength > $limitBacktrace) {
+			for ($offset = 0; $offset < $totalLength; $offset += $limitBacktrace) {
 				$part = substr($html, $offset, $limitBacktrace);
 				$mpdf->WriteHTML($part);
 			}
-		}
-		else
+		} else
 			$mpdf->WriteHTML($html);
 		$mpdf->Output($filename, $dest);
 	}
@@ -1283,45 +1238,6 @@ trait Helper {
 	// 	}
 	// }
 
-
-	// /**
-	//  * Valida os dados de senha e confirmar senha juntamento com o token
-	//  *
-	//  * @param Request $request Request da requisição HTTP.
-	//  * @param Response $response Response da requisição HTTP.
-	//  * @return array
-	//  */
-	// public static function newPassword(Request $request, Response $response): Response
-	// {
-	// 	try {
-	// 		$form = self::post();
-
-	// 		## Verifica se o tempo do token é valido
-	// 		JWT::decode($form['token'], new Key(ENV['SECRET_KEY_JWT'], 'HS256'));
-
-	// 		## Verifica se o token é valido no banco de dados
-	// 		$user = DB::select('*', 'tb_profissional', "token = '{$form['token']}'");
-	// 		if (empty($user)) throw new Exception('Token invalido!', 400);
-
-	// 		## Verifica se as senhas são iguais para criar o hash
-	// 		Helper::helpValidator('PASSWORD', 8, '', '', $form['senha'], '');
-	// 		if ($form['senha'] !== $form['confirmarSenha']) throw new Exception('As senhas devem ser iguais!', 400);
-	// 		$hash = password_hash($form['senha'], PASSWORD_DEFAULT);
-
-	// 		## Atualiza na base
-	// 		DB::update('tb_profissional', ["hash" => $hash, "token" => ""], "token = '{$form['token']}'");
-	// 		$content = self::success('OK');
-
-	// 		$response->getBody()->write(json_encode($content), JSON_UNESCAPED_SLASHES);
-	// 		return $response->withStatus(200);
-	// 	} catch (Exception $e) {
-	// 		$content = $e->getMessage();
-	// 		return Helper::error($e);
-	// 	} finally {
-	// 		Helper::logUser($request, $content);
-	// 	}
-	// }
-
 	// /**
 	//  * @TRANSFORMA IMAGENS NO TIPO BASE64
 	//  */
@@ -1330,37 +1246,6 @@ trait Helper {
 	// 	$type = pathinfo($path, PATHINFO_EXTENSION);
 	// 	$data = file_get_contents($path);
 	// 	return 'data:image/' . $type . ';base64,' . base64_encode($data);
-	// }
-
-	// /**
-	//  * Verifica a integridade do token da requisição HTTP
-	//  *
-	//  * @param Request $request Request da requisição HTTP.
-	//  * @param Response $response Response da requisição HTTP.
-	//  * @return array
-	//  */
-	// public static function checkToken(Request $request, Response $response): Response
-	// {
-	// 	try {
-	// 		$form = self::post();
-
-	// 		## Verifica se o tempo do token é valido
-	// 		JWT::decode($form['token'], new Key(ENV['SECRET_KEY_JWT'], 'HS256'));
-
-	// 		## Verifica se o token é valido no banco de dados
-	// 		$user = DB::select('*', 'tb_profissional', "token = '{$form['token']}'");
-	// 		if (empty($user)) throw new Exception('Token invalido!', 400);
-
-	// 		$content = Helper::success('OK');;
-
-	// 		$response->getBody()->write(json_encode($content), JSON_UNESCAPED_SLASHES);
-	// 		return $response->withStatus(200);
-	// 	} catch (Exception $e) {
-	// 		$content = $e->getMessage();
-	// 		return Helper::error($e);
-	// 	} finally {
-	// 		Helper::logUser($request, $content);
-	// 	}
 	// }
 
 	// /**
@@ -1392,229 +1277,14 @@ trait Helper {
 	// 	return ['data' => $data, 'recordsTotal' => $total_rows_filtered, 'recordsFiltered' => $total_rows];
 	// }
 
-	// /**
-	//  * Função que atualiza qualquer tabela do banco
-	//  * @param Request $request Request da requisição HTTP.
-	//  * @param Response $response Response da requisição HTTP.
-	//  * @return array or exception
-	//  */
-	// public static function updateTables(Request $request, Response $response)
-	// {
-	// 	try {
-	// 		$form = self::post();
-
-	// 		## Validação
-	// 		if ($form['column']  == 'cpf') $form['value']  = preg_replace("/\D/", "", $form['value']);
-	// 		if ($form['column2'] == 'cpf') $form['value2'] = preg_replace("/\D/", "", $form['value2']);
-
-	// 		self::dbValidation([$form['column'] => $form['value']], [$form['column'] => strtoupper($form['column'])], $form['table']);
-	// 		# # #
-
-	// 		DB::update($form['table'], [$form['column'] => $form['value']], "{$form['column2']} = {$form['value2']}");
-	// 		$content = self::success('OK');
-
-	// 		$response->getBody()->write(json_encode($content), JSON_UNESCAPED_SLASHES);
-	// 		return $response->withStatus(200);
-	// 	} catch (Exception $e) {
-	// 		$content = $e->getMessage();
-	// 		return Helper::error($e);
-	// 	} finally {
-	// 		Helper::logUser($request, $content);
-	// 	}
-	// }
-
 	/**
-	 * Recupera os dados da requisição POST do HTTP
-	 *
+	 * @param Request $request
 	 * @return array
 	 */
 	public function post(Request $request): array
 	{
 		return $this->removeSQLINJECTION($request->getParsedBody());
 	}
-
-	// /**
-	//  * Alimenta o arquivo log com os dados de requisição
-	//  *
-	//  * @return file
-	//  */
-	// public static function logUser(Request $request, $content)
-	// {
-	// 	$method = $request->getMethod();
-	// 	$route  = $request->getUri()->getPath();
-	// 	$USER = $request->getAttribute('USER');
-
-	// 	$log = [
-	// 		"user" 				 => @$USER->login,
-	// 		"ip" 				 => @$_SERVER['REMOTE_ADDR'],
-	// 		"metodo"			 => @$method,
-	// 		"acao"				 => @$route,
-	// 		"request"			 => @self::post() ? self::post() : "",
-	// 		"response"			 => @$content,
-	// 		"criado_em"			 => date('Y-m-d H:i:s')
-	// 	];
-
-	// 	$filename = "./log/log.json";
-	// 	if (file_exists($filename)) {
-	// 		$json = file_get_contents($filename);
-	// 		$separator = ',';
-	// 		$json = str_replace(array('[', ']'), '', $json);
-	// 	}
-	// 	file_put_contents($filename, "[" . @$json . @$separator . json_encode($log, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . "]");
-	// }
-
-	// /**
-	//  * Recupera o conteudo do arquivo log e exibe na tela
-	//  *
-	//  * @param Request $request Request da requisição HTTP.
-	//  * @param Response $response Response da requisição HTTP.
-	//  * @param array $args Argumentos da requisição HTTP.
-	//  * @return array
-	//  */
-	// public function showLog(Request $request, Response $response, array $args): Response
-	// {
-	// 	if ($args['action'] == '!ab@154$ghst@ddklj') {
-	// 		$data = json_decode(file_get_contents('./log/log.json'), true);
-	// 		$response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
-	// 	}
-
-	// 	return $response;
-	// }
-
-
-	// /**
-	//  * Verifica a integridade do login
-	//  */
-	// public static function blackList(string $id, string $ip){
-	// 	$data = DB::select('*', 'tb_black_list', "ip = '$ip'");
-	// 	if (empty($data))
-	// 		$id = DB::insert('tb_black_list', [
-	// 			"id_tb_profissional" => $id,
-	// 			"ip"				 => $ip,
-	// 			"tentativa"			 => 1
-	// 		]);
-	// 		return self::success($id);
-
-	// 	if ($data[0]['tentativa'] >= 10) throw new Exception('O usuário foi bloqueado por excesso de tentativas. Por favor contate a sua administração!', 400);
-
-	// 	DB::update('tb_black_list', [
-	// 		"tentativa" => ++$data[0]['tentativa']
-	// 	], "id_tb_profissional = '$id'");
-
-	// 	return self::success(true);
-	// }
-
-	// public static function identificarCategoria(Request $request){
-	// 	$USER = $request->getAttribute('USER');
-
-	// 	if(!isset($USER->idLogin)) throw new Exception('Sessão Expirada', 400);
-
-	// 	$sqlUsuario = "
-	// 		SELECT
-	// 			id_tb_unidade_saude,
-	// 			id_tb_instituicao_ensino
-	// 		FROM
-	// 			tb_profissional
-	// 		WHERE
-	// 			id = '{$USER->idLogin}'";
-
-	// 	$usuario = DB::runSelect($sqlUsuario)[0];
-
-	// 	if (!empty($usuario['id_tb_instituicao_ensino'])) {
-	// 		$sql = "
-	// 			SELECT
-	// 				id						AS id_entidade,
-	// 				nome nome_entidade,
-	// 				categoria,
-	// 				perm_solicitacao,
-	// 				'instituicao_ensino'	AS tipo_instituicao
-	// 			FROM tb_instituicao_ensino
-	// 			WHERE id = '{$usuario['id_tb_instituicao_ensino']}'";
-	// 	} else if (!empty($usuario['id_tb_unidade_saude'])) {
-	// 		$sql = "
-	// 			SELECT
-	// 				id						AS id_entidade,
-	// 				nome nome_entidade,
-	// 				categoria,
-	// 				'unidade_saude'			AS tipo_instituicao
-	// 			FROM tb_unidade_saude
-	// 			WHERE id = '{$usuario['id_tb_unidade_saude']}'";
-	// 	}
-
-	// 	$resultado = DB::runSelect($sql);
-
-	// 	return $resultado[0];
-	// }
-
-	// /**
-	//  * Verifica se já existe o curso no banco. 
-	//  */
-	// public static function duplicateCourse($id, $curso, $nivel){
-	// 	$data = DB::select('*', 'tb_curso_programa', "instituicao_id = '$id' AND nivel = '$nivel'", "curso = '$curso'");
-
-	// 	return $data;
-	// }
-
-	// /**
-	//  * Verifica se já existe o curso no banco. 
-	//  */
-	// public static function checkDocs($id, $table){
-	// 	$data = DB::select('*', 'tb_documento', "table_id = '$id'", "table_name = '$table'");
-
-	// 	if (!empty($data)) {
-	// 		$res = ['message' => 'OK', 'code' => 200];
-	// 	} else {
-	// 		$res = ['message' => 'Não Existe', 'code' => null];
-	// 	}
-
-	// 	return $res;
-	// }
-
-	// /**
-	//  * Retorna a categoria da instituicao para controle de exibição dos inputs
-	//  */
-	// public function controlaInputsCategoria(Request $request, Response $response): Response
-	// {
-	// 	try {
-	// 		$form = self::post();
-
-	// 		$query =
-	// 			"SELECT categoria
-	// 				FROM tb_instituicao_ensino
-	// 				WHERE id = (
-	// 					SELECT id_tb_instituicao_ensino
-	// 					FROM tb_solicitacao_vaga_estagio
-	// 					WHERE id = {$form['id']}
-	// 				)";
-	// 		$data = DB::runSelect($query)[0];
-
-	// 		$response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
-	// 		return $response->withStatus(200);
-	// 	} catch (Exception $e) {
-	// 		return Helper::error($e);
-	// 	}
-	// }
-
-	// /**
-	//  * Verifica se todas unidades/instituicoes estao ativas na permissao de aditamento
-	//  */
-	// public function getToggleStatus(Request $request, Response $response): Response
-	// {
-	// 	try {
-	// 		$data['unidade'] = DB::select('perm_aditamento', 'tb_unidade_saude', "ativo = 1");
-	// 		$data['instituicao'] = DB::select('perm_aditamento', 'tb_instituicao_ensino', 'ativo = 1');
-
-	// 		foreach($data as $k => $v){
-	// 			if(in_array('0', array_column($data[$k], 'perm_aditamento'))) $data[$k] = false;
-	// 			else $data[$k] = true;
-	// 		}
-
-	// 		$response->getBody()->write(json_encode($data, JSON_UNESCAPED_UNICODE));
-	// 		return $response->withStatus(200);
-	// 	} catch (Exception $e) {
-	// 		return Helper::error($e);
-	// 	}
-	// }
 
 	// public function exportZip(Request $request, Response $response): Response {
 
@@ -1645,7 +1315,7 @@ trait Helper {
 
 	// 		return Helper::outputFile("$nameZip.zip");
 	// 	};
-		
+
 	// 	try {
 	// 		return $response->withBody($export())->withStatus(200);
 	// 	} catch (Exception $e) {

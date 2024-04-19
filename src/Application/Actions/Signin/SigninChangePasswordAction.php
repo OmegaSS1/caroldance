@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\Actions\Signin;
 
 use App\Application\Traits\Helper;
+use App\Domain\DomainException\CustomDomainException;
 use App\Domain\User\UserNotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
@@ -37,7 +38,6 @@ class SigninChangePasswordAction extends SigninAction
       Equipe de Suporte Save Money";
     $this->sendMail($title, $body, $form['email']);
     $this->database->commit();
-    $this->logger->warning("[ForgotPassword - IP " . IP . "] Senha alterada com sucesso!", $form);
 
     return $this->respondWithData();
   }
@@ -48,8 +48,7 @@ class SigninChangePasswordAction extends SigninAction
     $this->validKeysForm($form, ['token', 'senha', 'confirmarSenha']);
 
     if ($form['senha'] != $form['confirmarSenha']) {
-      $this->logger->notice("[ForgotPassword - ID {$this->USER->data->id} IP " . IP . "] As senha precisam ser iguais!", $form);
-      throw new Exception('As senhas precisam ser iguais!');
+      throw new CustomDomainException('As senhas precisam ser iguais!');
     }
 
     $jwtDecodeToken = JWT::decode($form['token'], new Key(ENV['SECRET_KEY_JWT'], 'HS256'));
@@ -57,13 +56,10 @@ class SigninChangePasswordAction extends SigninAction
     $form['email'] = $jwtDecodeToken->data->email;
 
     if (!$user) {
-      $this->logger->info("[ForgotPassword - IP " . IP . "] Usuario não encontrado!", $form);
-      throw new UserNotFoundException('Email não cadastrado!');
+      throw new UserNotFoundException();
     } 
-    else if (!$user->getStatus) {
-      $this->logger->info("[ForgotPassword - IP " . IP . "] Seu usuário foi inativado, não é possivel efetuar a troca de senha!", $form);
-      throw new Exception('Seu usuário foi inativado, não é possivel efetuar a troca de senha!');
-
+    else if (!$user->getStatus()) {
+      throw new CustomDomainException('Seu usuário foi inativado, não é possivel efetuar a troca de senha!');
     }
 
     return $form;

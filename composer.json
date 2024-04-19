@@ -24,6 +24,7 @@
     "require": {
         "php": "^7.4 || ^8.0",
         "ext-json": "*",
+        "dompdf/dompdf": "^2.0",
         "firebase/php-jwt": "^6.10",
         "google/apiclient": "^2.15",
         "jenssegers/blade": "^2.0",
@@ -34,7 +35,10 @@
         "phpmailer/phpmailer": "^6.9",
         "ramsey/uuid": "^4.7",
         "slim/psr7": "^1.5",
-        "slim/slim": "^4.10"
+        "slim/slim": "^4.10",
+        "box/spout": "^3.3",
+        "ext-zip": "*",
+        "ext-xmlreader": "*"
     },
     "require-dev": {
         "jangregor/phpstan-prophecy": "^1.0.0",

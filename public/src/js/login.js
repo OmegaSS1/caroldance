@@ -3,7 +3,11 @@ import { mp } from './mercadopago.js'
 
 $(document).ready(async() => {
 
-  await mp();
+  // await mp();
+
+  api_base.get('admin/student/export/xlsx', {responseType: 'blob'}).then(response => {
+    console.log(response)
+  })
   
   // $('#pagar').on('click', event => {
   //   api_base.get('/services/mercadopago/createPreference').then(async(response) => {

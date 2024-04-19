@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS local (
   status BOOLEAN DEFAULT 1
 ) ENGINE=InnoDB;
 
-INSERT INTO local (nome) VALUES ('BA - Bahia');
+INSERT INTO local (nome) VALUES ('Studio Carol Dance'), ('Studio Mussurunga Dance'), ('Experimental');
 
 DROP TABLE IF EXISTS usuario;
 CREATE TABLE IF NOT EXISTS usuario (
@@ -130,9 +130,7 @@ DROP TABLE IF EXISTS mensalidade;
 CREATE TABLE IF NOT EXISTS mensalidade (
   id INT AUTO_INCREMENT PRIMARY KEY,
   aluno_id INT REFERENCES aluno(id),
-  atividade_aluno_id INT REFERENCES atividade_aluno(id),
-  valor DECIMAL(10, 2) NOT NULL,
-  mes SET('Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'),
+  mes SET('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'),
   dh_vencimento TIMESTAMP NOT NULL,
   dh_pagamento TIMESTAMP,
   status_pagamento SET('Pendente', 'Em processamento', 'Concluido', 'Falhou', 'Cancelado', 'Estornado'),
@@ -140,13 +138,12 @@ CREATE TABLE IF NOT EXISTS mensalidade (
   dh_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
   dh_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP(),
   status BOOLEAN DEFAULT 1,
-  FOREIGN KEY (aluno_id) REFERENCES aluno(id),
-  FOREIGN KEY (atividade_aluno_id) REFERENCES atividade_aluno(id)
+  FOREIGN KEY (aluno_id) REFERENCES aluno(id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS black_list (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  ip VARCHAR(20) NOT NULL,
+  ip VARCHAR(50) NOT NULL,
   tentativa INT NOT NULL,
   bloqueio_permanente BOOLEAN DEFAULT 0,
   data_inclusao DATETIME NOT NULL,

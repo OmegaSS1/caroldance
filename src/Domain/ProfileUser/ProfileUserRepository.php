@@ -16,6 +16,6 @@ interface ProfileUserRepository
      * @return ProfileUser
      * @throws ProfileUserNotFoundException
      */
-    public function findUserOfId(int $id): ProfileUser;
+    public function findProfileUserById(int $id): ProfileUser;
 
 }

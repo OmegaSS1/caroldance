@@ -8,5 +8,5 @@ use App\Domain\DomainException\DomainRecordNotFoundException;
 
 class UserAlreadyRegisterException extends DomainRecordNotFoundException
 {
-    public $message = 'O usuário já está cadastrado!';
+    public $message = '[User (ALREADYREGISTER)] - O Usuario já está cadastrado!';
 }

@@ -50,7 +50,7 @@ class Mysqlconnection implements DatabaseInterface {
             };
             return $meta;
         } catch (PDOException $e) {
-            $this->logger->info("[Database (GETCOLUMNMETA) - IP ".IP."]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
+            $this->logger->info("[(IP ".IP.") Database (GETCOLUMNMETA)]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
             throw new PDOException($this->loggerMessage);
         }
     }
@@ -68,7 +68,7 @@ class Mysqlconnection implements DatabaseInterface {
             $stm->execute();
             return $stm->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->logger->error("[Database (RUNSELECT) - IP ".IP."]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
+            $this->logger->error("(IP ".IP.") [Database (RUNSELECT)]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
             throw new PDOException($this->loggerMessage);
         }
     }
@@ -86,7 +86,7 @@ class Mysqlconnection implements DatabaseInterface {
           $stm->execute();
           return $this->connection->lastInsertId();
       } catch (PDOException $e) {
-        $this->logger->error("[Database (RUN) - IP ".IP."]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
+        $this->logger->error("(IP ".IP.") [Database (RUN)]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
         throw new PDOException($this->loggerMessage);
       }
     }
@@ -104,7 +104,7 @@ class Mysqlconnection implements DatabaseInterface {
           $stm->execute();
           return $stm->rowCount();
       } catch (PDOException $e) {
-        $this->logger->error("[Database (RUNROW) - IP ".IP."]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
+        $this->logger->error("( IP ".IP.") [Database (RUNROW)]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
         throw new PDOException($this->loggerMessage);
       }
     }
@@ -125,7 +125,7 @@ class Mysqlconnection implements DatabaseInterface {
           $stm->execute();
           return $stm->rowCount();
       } catch (PDOException $e) {
-        $this->logger->error("[Database (ROW) - IP ".IP."]", ["Code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
+        $this->logger->error("( IP ".IP.") [Database (ROW)]", ["Code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
         throw new PDOException($this->loggerMessage);
       }
     }
@@ -146,7 +146,7 @@ class Mysqlconnection implements DatabaseInterface {
             $stm->execute();
             return $stm->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            $this->logger->error("[Database (SELECT) - IP ".IP."]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
+            $this->logger->error("(IP ".IP.") [Database (SELECT)]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
             throw new PDOException($this->loggerMessage);
         }
     }
@@ -194,7 +194,7 @@ class Mysqlconnection implements DatabaseInterface {
         }
         catch(PDOException $e){
             $this->connection->rollBack();
-            $this->logger->error("[Database (BINDVALUE) - IP ".IP."]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
+            $this->logger->error("( IP ".IP.") [Database (BINDVALUE)]", ["code" => $e->getCode(), "message" => $e->getMessage(), "file" => $e->getFile(), "line" => $e->getLine()]);
             throw new PDOException($this->loggerMessage);
         }
     }

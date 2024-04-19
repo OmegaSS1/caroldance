@@ -4,14 +4,8 @@ declare(strict_types=1);
 
 namespace App\Application\Middleware\MiddlewareException;
 
-use App\Database\DatabaseInterface;
-use Slim\Exception\HttpUnauthorizedException;
+use App\Domain\DomainException\DomainRecordNotFoundException;
 
-class InvalidTokenCSRFException extends HttpUnauthorizedException {
-    public  function __construct($request, DatabaseInterface $database) {
-    $database->delete('token_csrf', ["ip" => IP]);
-    $database->commit();
-
-    parent::__construct($request);
-  }
+class InvalidTokenCSRFException extends DomainRecordNotFoundException {
+  public $message = "Token Inválido!";
 }

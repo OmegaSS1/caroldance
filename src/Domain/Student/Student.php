@@ -12,21 +12,21 @@ class Student implements JsonSerializable {
     private string $sobrenome;
     private string $dataNascimento;
     private string $cpf;
-    private ?int $servicoAlunoId;
+    private ?int $atividadeAlunoId;
     private string $dhCriacao;
     private string $dhAtualizacao;
     private ?int $status;
 
-    public function __construct(?int $id, string $nome, string $sobrenome, string $dataNascimento, string $cpf, ?int $servicoAlunoId, string $dhCriacao, string $dhAtualizacao, int $status) {
-        $this->id = $id;
-        $this->nome = $nome;
-        $this->sobrenome = $sobrenome;
-        $this->dataNascimento = $dhCriacao;
-        $this->cpf = $cpf;
-        $this->servicoAlunoId = $servicoAlunoId;
-        $this->dhCriacao = $dhCriacao;
-        $this->dhAtualizacao = $dhAtualizacao;
-        $this->status = $status;
+    public function __construct(?int $id, string $nome, string $sobrenome, string $dataNascimento, string $cpf, ?int $atividadeAlunoId, string $dhCriacao, string $dhAtualizacao, int $status) {
+        $this->id               = $id;
+        $this->nome             = $nome;
+        $this->sobrenome        = $sobrenome;
+        $this->dataNascimento   = $dataNascimento;
+        $this->cpf              = $cpf;
+        $this->atividadeAlunoId = $atividadeAlunoId;
+        $this->dhCriacao        = $dhCriacao;
+        $this->dhAtualizacao    = $dhAtualizacao;
+        $this->status           = $status;
     }
 
     public function getId(): ?int {
@@ -44,8 +44,8 @@ class Student implements JsonSerializable {
     public function getCpf(): string {
         return $this->cpf;
     }
-    public function getServicoAlunoId(): ?int {
-        return $this->servicoAlunoId;
+    public function getAtividadeAlunoId(): ?int {
+        return $this->atividadeAlunoId;
     }
     public function getDhCriacao(): string {
         return $this->dhCriacao;
@@ -66,7 +66,7 @@ class Student implements JsonSerializable {
             'sobrenome'             => $this->sobrenome,
             'dataNascimento'        => $this->dataNascimento,
             'cpf'                   => $this->cpf,
-            'servicoAlunoId'        => $this->servicoAlunoId,
+            'atividadeAlunoId'      => $this->atividadeAlunoId,
             'dhCriacao'             => $this->dhCriacao,
             'dhAtualizacao'         => $this->dhAtualizacao,
             'status'                => $this->status

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Middleware;
 
-use App\Application\Handlers\HttpErrorHandler;
 use App\Application\Middleware\MiddlewareException\InvalidTokenCSRFException;
 use App\Application\Traits\Helper;
 use App\Database\DatabaseInterface;
+use App\Domain\DomainException\CustomDomainException;
 use Exception;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -18,11 +18,10 @@ use Psr\Log\LoggerInterface;
 class ValidateTokenCSRFMiddleware implements Middleware
 {
   use Helper;
-  protected DatabaseInterface $database;
-  protected string $table_token_csrf = "token_csrf";
-  protected string $table_black_list = "black_list";
-
-  protected LoggerInterface $logger;
+  private DatabaseInterface $database;
+  private string $table_token_csrf = "token_csrf";
+  private string $table_black_list = "black_list";
+  private LoggerInterface $logger;
 
 
   public function __construct(DatabaseInterface $database, LoggerInterface $logger)
@@ -35,14 +34,25 @@ class ValidateTokenCSRFMiddleware implements Middleware
     if ($request->getMethod() == 'POST') {
       $ip_request          = IP;
       $token_csrf          = $request->getCookieParams()['X-Csrf-Token'] ?? '';
-      $form                = json_decode(file_get_contents('php://input'), true) ?? [];
       $user_request        = $this->database->select('*', $this->table_black_list, "ip = '$ip_request'");
       $database_token_csrf = $this->database->select('token', $this->table_token_csrf, "token = '$token_csrf'", "ip = '$ip_request'");
+      $logInfo             = [
+        "User"     => $request->getAttribute("USER")->data->id ?? "Usuário não logado",
+        "Ip"       => $ip_request,
+        "Method"   => $request->getMethod(),
+        "Route"    => $request->getUri()->getPath(),
+        "Response" => 'Usuário Bloqueado! Entre em contato com o administrador.'
+      ];
 
       if ($user_request and $user_request[0]['bloqueio_permanente'] == 1) {
-        $this->logger->notice("[Middleware - IP $ip_request] Usuário Bloqueado! Entre em contato com o administrador.", $form);
-        throw new Exception('Usuário Bloqueado! Entre em contato com o administrador.');
-      } else if (!$database_token_csrf || !hash_equals($database_token_csrf[0]['token'], $token_csrf)) {
+        $this->database->delete($this->table_token_csrf, ["ip" => $ip_request]);
+        $this->database->commit();
+        $request = $request->withHeader('Set-Cookie', '');
+
+        $this->logger->warning(json_encode($logInfo, JSON_UNESCAPED_UNICODE), $user_request ?? []);
+        throw new CustomDomainException('Usuário Bloqueado! Entre em contato com o administrador.');
+      } 
+      else if (!$database_token_csrf || !hash_equals($database_token_csrf[0]['token'], $token_csrf)) {
         if (!$user_request) {
           $route = $request->getUri()->getPath();
           $this->database->insert($this->table_black_list, [
@@ -60,15 +70,13 @@ class ValidateTokenCSRFMiddleware implements Middleware
             $this->database->update($this->table_black_list, ['tentativa' => $user_request[0]['tentativa']], "ip = '$ip_request'");
         }
 
+        $this->database->delete($this->table_token_csrf, ["ip" => $ip_request]);
         $this->database->commit();
+        $request = $request->withHeader('Set-Cookie', '');
+        $logInfo['Response'] = 'Token Inválido!';
 
-        if (isset($user_request[0]["tentativa"]) and $user_request[0]["tentativa"] >= 10) {
-          $this->logger->info("[Middleware - IP $ip_request] Token CSRF Inválido! Usuário bloqueado!", $form);
-          throw new InvalidTokenCSRFException($request, $this->database);
-        }
-
-        $this->logger->info("[Middleware - IP $ip_request] Token CSRF Inválido!", $form);
-        throw new InvalidTokenCSRFException($request, $this->database);
+        $this->logger->warning(json_encode($logInfo, JSON_UNESCAPED_UNICODE), $user_request ?? []);
+        throw new InvalidTokenCSRFException();
       }
 
       if ($user_request)
@@ -77,7 +85,7 @@ class ValidateTokenCSRFMiddleware implements Middleware
       $this->database->commit();
 
       $response = $handler->handle($request);
-      $this->database->delete('token_csrf', ["ip" => $ip_request]);
+      $this->database->delete($this->table_token_csrf, ["ip" => $ip_request]);
       $this->database->commit();
 
       return $response;

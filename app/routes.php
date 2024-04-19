@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Application\Actions\ActivityStudent\{ActivityStudentListAction, ActivityStudentRegisterAction};
+use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
 use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
-use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction};
-use App\Application\Actions\Student\{StudentRegisterAction};
+use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction, UserExportAction};
+use App\Application\Actions\Student\{StudentRegisterAction, StudentListAction, StudentExportAction};
 
 use App\Application\Services\Google\GoogleOAuth;
 use App\Application\Services\Facebook\FacebookOAuth;
@@ -35,6 +37,21 @@ return function (App $app) {
     });
     $app->group('/caroldance', function (Group $group) {
 
+        $group->group('/teste', function (Group $group) {
+            $group->post('/csrf', function (Request $request, Response $response) {
+                $response->getBody()->write('Deu certo');
+                return $response;
+            });
+            $group->get('/jwt', function (Request $request, Response $response) {
+                $response->getBody()->write('Deu certo');
+                return $response;
+            })->add(AuthenticateUserMiddleware::class);
+            $group->post('/csrfjwt', function (Request $request, Response $response) {
+                $response->getBody()->write('Deu certo');
+                return $response;
+            })->add(AuthenticateUserMiddleware::class);
+        });
+
         $group->group('/signin', function (Group $group) {
             $group->post('', SigninLoginAction::class);
             $group->post('/register', UserLoginRegisterAction::class);
@@ -43,16 +60,31 @@ return function (App $app) {
         });
 
         $group->group('/user', function (Group $group) {
-            $group->post('', UserListAction::class);
             $group->post('/{id}', UserViewAction::class);
         })->add(AuthenticateUserMiddleware::class);
 
         $group->group('/admin', function (Group $group) {
-            $group->post('/register/student', StudentRegisterAction::class);
-            $group->post('/register/user', UserAdminRegisterAction::class);
-            // $group->post('/{id}', ViewUserAction::class);
+            $group->group('/student', function (Group $student) {
+                $student->post('/register', StudentRegisterAction::class);
+                $student->get('/list', StudentListAction::class);
+                $student->get('/export/{extension}', StudentExportAction::class);
+            });
+            $group->group('/user', function (Group $user) {
+                $user->post('/register', UserAdminRegisterAction::class);
+                $user->get('/list', UserListAction::class);
+                $user->get('/export/{extension}', UserExportAction::class);
+
+            });
+            $group->group('/activityStudent', function (Group $activityStudent) {
+                $activityStudent->post('/register', ActivityStudentRegisterAction::class);
+                $activityStudent->get('/list', ActivityStudentListAction::class);
+            });
+            $group->group('/monthlyPayment', function (Group $monthlyPayment) {
+                // $monthlyPayment->post('/register', ActivityStudentRegisterAction::class);
+                $monthlyPayment->get('/list', MonthlyPaymentListAction::class);
+            });
         });
-        // ->add(AuthenticateUserMiddleware::class);
+        //->add(AuthenticateUserMiddleware::class);
 
         $group->group('/token', function (Group $group) {
             $group->get('/csrf', GenerateTokenCSRFMiddleware::class);

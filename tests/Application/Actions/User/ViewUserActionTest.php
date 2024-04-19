@@ -27,7 +27,7 @@ class ViewUserActionTest extends TestCase
 
         $userRepositoryProphecy = $this->prophesize(UserRepository::class);
         $userRepositoryProphecy
-            ->findUserOfId(1)
+            ->findUserById(1)
             ->willReturn($user)
             ->shouldBeCalledOnce();
 
@@ -61,7 +61,7 @@ class ViewUserActionTest extends TestCase
 
         $userRepositoryProphecy = $this->prophesize(UserRepository::class);
         $userRepositoryProphecy
-            ->findUserOfId(1)
+            ->findUserById(1)
             ->willThrow(new UserNotFoundException())
             ->shouldBeCalledOnce();
 

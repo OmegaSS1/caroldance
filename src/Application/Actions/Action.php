@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Actions;
 
+use App\Application\Traits\Helper;
 use App\Database\DatabaseInterface;
 use App\Domain\DomainException\DomainRecordNotFoundException;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -14,12 +15,14 @@ use Slim\Exception\HttpNotFoundException;
 
 abstract class Action
 {
+    use Helper;
     protected LoggerInterface $logger;
     protected Request $request;
     protected Response $response;
     protected array $args;
-    protected  DatabaseInterface $database;
+    protected DatabaseInterface $database;
     protected $USER;
+    protected array $logInfo;
     
     public function __construct(LoggerInterface $logger, DatabaseInterface $database)
     {
@@ -33,14 +36,22 @@ abstract class Action
      */
     public function __invoke(Request $request, Response $response, array $args): Response
     {
-        $this->request = $request;
+        $this->request  = $request;
         $this->response = $response;
-        $this->USER = $this->request->getAttribute("USER") ?? (object) ["data" => (object) ["id" => "Usuário não logado"]];
-        $this->args = $args;
+        $this->args     = $args;
+        $this->USER     = $this->request->getAttribute("USER") ?? (object) ["data" => (object) ["id" => "Usuário não logado"]];
+        $this->logInfo  = [
+            "User"     => $this->USER->data->id, 
+            "Ip"       => IP, 
+            "Method"   => $this->request->getMethod(), 
+            "Route"    => $this->request->getUri()->getPath(),
+        ];
 
         try {
             return $this->action();
         } catch (DomainRecordNotFoundException $e) {
+            $this->logInfo["Response"] = $e->getMessage();
+            $this->logger->error(json_encode($this->logInfo, JSON_UNESCAPED_UNICODE), $this->request->getParsedBody() ?? $this->args);
             throw new HttpNotFoundException($this->request, $e->getMessage());
         }
     }
@@ -79,6 +90,11 @@ abstract class Action
     {
         $payload = new ActionPayload($statusCode, $data);
 
+        if($this->request->getMethod() !== 'GET'){
+            $this->logInfo['Response'] = $statusCode;
+            $this->logger->info(json_encode($this->logInfo, JSON_UNESCAPED_UNICODE), $this->request->getParsedBody() ?? $this->args);
+        }
+        
         return $this->respond($payload);
     }
 

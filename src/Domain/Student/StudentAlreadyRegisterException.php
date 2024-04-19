@@ -8,5 +8,5 @@ use App\Domain\DomainException\DomainRecordNotFoundException;
 
 class StudentAlreadyRegisterException extends DomainRecordNotFoundException
 {
-    public $message = 'O aluno já está cadastrado!';
+    public $message = '[Student (ALREADYREGISTER)] - O aluno já está cadastrado!';
 }

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Domain\Student;
 
-interface StudentRepository {
-    
+interface StudentRepository
+{
+
     /**
      * @return Student[]
      */
@@ -16,5 +17,12 @@ interface StudentRepository {
      * @return mixed
      * @throws boolean
      */
-    public function findUserByCpf(string $cpf);
+    public function findStudentByCpf(string $cpf);
+
+    /**
+     * @param int $id
+     * @return Student
+     * @throws StudentNotFoundException
+     */
+    public function findStudentById(int $id): Student;
 }

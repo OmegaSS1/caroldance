@@ -3,13 +3,13 @@
 // VERIFICA A URL DE ORIGEM
 const current_location = location.href.split("/", 3)
 export const api_base = axios.create({
-  baseURL: "http://localhost:8080/appteste/",
+  baseURL: "http://localhost:8000/caroldance/",
   timeout: 60000,
-  withCredentials: true
+  // withCredentials: true
 });
 
 export const api_base_login = axios.create({
-  baseURL: "http://localhost:8080/appteste/",
+  baseURL: "http://localhost:8000/caroldance/",
   timeout: 60000,
   withCredentials: true
 });

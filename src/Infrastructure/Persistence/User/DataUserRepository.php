@@ -9,6 +9,7 @@ use App\Domain\User\UserNotFoundException;
 use App\Domain\User\UserRepository;
 
 use App\Database\DatabaseInterface;
+use Psr\Log\LoggerInterface;
 
 class DataUserRepository implements UserRepository
 {
@@ -16,12 +17,14 @@ class DataUserRepository implements UserRepository
      * @var User[]
      */
     private array $users = [];
+    private LoggerInterface $logger;
 
     /**
      * @param DatabaseInterface $database
      */
-    public function __construct(DatabaseInterface $database)
+    public function __construct(DatabaseInterface $database, LoggerInterface $logger)
     {
+        $this->logger = $logger;
         $data = $database->select('*', 'usuario');
         foreach ($data as $v){
             $this->users[$v['id']] = new User(
@@ -54,7 +57,7 @@ class DataUserRepository implements UserRepository
     /**
      * {@inheritdoc}
      */
-    public function findUserOfId(int $id): User
+    public function findUserById(int $id): User
     {
         if (!isset($this->users[$id])) {
             throw new UserNotFoundException();
@@ -87,7 +90,7 @@ class DataUserRepository implements UserRepository
         $key = array_search($email, $emailArray, true);
         
         if ($key === false) {
-        return false;
+            return false;
         }
 
         return $this->users[$key];

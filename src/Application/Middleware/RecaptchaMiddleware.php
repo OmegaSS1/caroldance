@@ -17,11 +17,9 @@ class RecaptchaMiddleware extends ActionMiddleware{
     $responseData = json_decode(file_get_contents($url));
 
     if($responseData->success){
-      $this->logger->info("[Middleware - IP ".IP."]", get_object_vars($responseData));
       return $this->respondWithData(['message' => 'Token verificado com sucesso!']);
     }
     
-    $this->logger->info("[Middleware - IP ".IP."]", get_object_vars($responseData));
     throw new InvalidRecaptchaMiddleware($this->request);
   }
 }

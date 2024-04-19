@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Student;
 
+use App\Domain\DomainException\CustomDomainException;
 use Psr\Http\Message\ResponseInterface as Response;
-use Exception;
+
+use DateTimeImmutable;
 
 class StudentRegisterAction extends StudentAction
 {
@@ -15,37 +17,64 @@ class StudentRegisterAction extends StudentAction
 
         $form = self::validateForm($this->post($this->request));
 
-        $form['data_nascimento'] = $form['dataNascimento'];
-        $form['servico_aluno_id'] = $form['servicoAlunoId'];
-        unset($form['dataNascimento']);
-        unset($form['servicoAlunoId']);
+        $id = $this->database->insert('aluno', [
+            'nome'               => ucfirst($form['nome']),
+            'sobrenome'          => ucfirst($form['sobrenome']),
+            'data_nascimento'    => $form['dataNascimento'],
+            "cpf"                => $form["cpf"],
+            "atividade_aluno_id" => $form["atividadeAlunoId"],
+        ]);
 
-        $this->database->insert('aluno', $form);
+        $monthNow = (int) date('m');
+        $meses    = [
+            '1'  => date('Y') . '-01-05',
+            '2'  => date('Y') . '-02-05', 
+            '3'  => date('Y') . '-03-05', 
+            '4'  => date('Y') . '-04-05', 
+            '5'  => date('Y') . '-05-05', 
+            '6'  => date('Y') . '-06-05', 
+            '7'  => date('Y') . '-07-05', 
+            '8'  => date('Y') . '-08-05', 
+            '9'  => date('Y') . '-09-05', 
+            '10' => date('Y') . '-10-05', 
+            '11' => date('Y') . '-11-05', 
+            '12' => date('Y') . '-12-05'
+        ];
+        foreach($meses as $mes => $dia) {
+            $month = (int) DateTimeImmutable::createFromFormat('Y-m-d', $dia)->format('m');
+            if($month > $monthNow){
+                $this->database->insert('mensalidade', [
+                    "aluno_id"         => $id,
+                    "mes"              => $mes,
+                    "dh_vencimento"    => $dia,
+                    "status_pagamento" => 'Pendente',
+                ]);
+            }
+        }
+
         $this->database->commit();
-        $this->logger->info("[Student - ID {$this->USER->data->id} IP ".IP."] - Aluno cadastrado com sucesso!", $form);
 
         return $this->respondWithData();
     }
 
     private function validateForm(array $form): array{
-        $this->validKeysForm($form, ["nome", "sobrenome", "dataNascimento", "cpf", "servicoAlunoId"]);
+        $this->validKeysForm($form, ["nome", "sobrenome", "dataNascimento", "cpf", "atividadeAlunoId"]);
         $form['cpf'] = $this->isCPF($form['cpf']);
 
         $years = $this->diffBetweenDatetimes(date('Y-m-d'), $form['dataNascimento'], 'y');
         [$year, $month, $day] = explode('-', $form['dataNascimento']);
 
         if (!checkdate((int)$month, (int)$day, (int)$year)) {
-            $this->logger->error("[Student - ID {$this->USER->data->id} IP ".IP."] - A data de nascimento informada está inválida!", $form);
-            throw new Exception('A data de nascimento informada está inválida!');
+            throw new CustomDomainException('A data de nascimento informada está inválida!');
         } 
-        else if ($years < 18 or $years > 125) {
-            $this->logger->error("[Student - ID {$this->USER->data->id} IP ".IP."] - O usuário precisa ter entre 18 e 125 anos!", $form);
-            throw new Exception('O usuário precisa ter entre 18 e 125 anos!');
+        else if ($years > 125) {
+            throw new CustomDomainException('O Aluno precisa ter menos de 125 anos!');
         }
-        else if(!!$this->studentRepository->findUserByCpf($form['cpf'])){
-            $this->logger->error("[Student - ID {$this->USER->data->id} IP ".IP."] - Aluno já cadastrado!", $form);
-            throw new Exception('Aluno já cadastrado!');
+        else if(!!$this->studentRepository->findStudentByCpf($form['cpf'])){
+            throw new CustomDomainException('Aluno já cadastrado!');
         }
+
+        $this->activityStudentRepository->findActivityStudentById($form['atividadeAlunoId']);
 
         return $form;
     }
