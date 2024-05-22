@@ -117,7 +117,7 @@ class Mysqlconnection implements DatabaseInterface {
       $order = strlen($order) ? 'ORDER BY ' . $order : '';
       $limit = strlen($limit) ? 'LIMIT '   . $limit : '';
 
-      $query = "SELECT $select FROM $table $where $and $order $limit";
+      $query = "SELECT $select FROM $table $where $and $order $limit FOR UPDATE";
 
       try {
 
@@ -138,7 +138,7 @@ class Mysqlconnection implements DatabaseInterface {
         $group = strlen($group) ? 'GROUP BY ' . $group : '';
         $order = strlen($order) ? 'ORDER BY ' . $order : '';
         $limit = strlen($limit) ? 'LIMIT '   . $limit : '';
-        $query = "SELECT $select FROM $table $where $and $group $order $limit";
+        $query = "SELECT $select FROM $table $where $and $group $order $limit FOR UPDATE";
 
         try {
 

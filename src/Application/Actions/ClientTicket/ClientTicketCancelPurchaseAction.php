@@ -13,12 +13,12 @@ class ClientTicketCancelPurchaseAction extends ClientTicketAction {
 
         foreach($form['assentos'] as $v){
             $seatName = $this->ticketRepository->findTicketById($v)->getAssento();
-            if(!!$this->database->select('*', 'cliente_ingresso', "ingresso_id = $v", "periodo = '{$form['periodo']}' AND status = 1")){
+            if(!!$data = $this->database->select('*', 'cliente_ingresso', "ingresso_id = $v", "periodo = '{$form['periodo']}' AND status = 1")){
                 $this->database->update('cliente_ingresso', [
                     "status_pagamento" => "Cancelado",
                     "status" => 0
                 ],
-                "ingresso_id = $v", "periodo = '{$form['periodo']}'");
+                "id = {$data[0]['id']}");
             }
             else{
                 throw new CustomDomainException("O assento $seatName não foi localizado na base de dados!");

@@ -22,7 +22,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
                     $this->database->update('cliente_ingresso', [
                         "status_pagamento" => "Concluido"
                     ],
-                    "ingresso_id = $v", "periodo = '{$form['periodo']}'");
+                    "id = {$data[0]['id']}");
                     switch((int)$data[0]['valor']){
                         case 0:
                             $ticketMail .= "Assento $seatName - Cortesia";
