@@ -3,6 +3,11 @@
 declare(strict_types=1);
 
 use App\Application\Actions\ActivityStudent\{ActivityStudentListAction, ActivityStudentRegisterAction};
+use App\Application\Actions\ClientTicket\ClientTicketCancelPurchaseAction;
+use App\Application\Actions\ClientTicket\ClientTicketConfirmPurchaseAction;
+use App\Application\Actions\ClientTicket\ClientTicketPurchaseAction;
+use App\Application\Actions\ClientTicket\ClientTicketListAction;
+use App\Application\Actions\ClientTicket\ClientTicketListSeatsAction;
 use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
 use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
 use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction, UserExportAction};
@@ -59,9 +64,22 @@ return function (App $app) {
             $group->post('/changePassword', SigninChangePasswordAction::class);
         });
 
-        $group->group('/user', function (Group $group) {
-            $group->post('/{id}', UserViewAction::class);
+        $group->group('/user', function (Group $user) {
+            $user->post('/{id}', UserViewAction::class);
         })->add(AuthenticateUserMiddleware::class);
+
+        $group->group('/clientTicket', function(Group $clientTicket) {
+            $clientTicket->group('/ticket', function(Group $ticket) {
+                $ticket->post('/buy', ClientTicketPurchaseAction::class);
+                $ticket->put('/cancel', ClientTicketCancelPurchaseAction::class);
+                $ticket->put('/confirm', ClientTicketConfirmPurchaseAction::class);
+                $ticket->get('', ClientTicketListAction::class);
+            });
+            $clientTicket->group('/seat', function(Group $seat) {
+                $seat->get('', ClientTicketListSeatsAction::class);
+            });
+            
+        });
 
         $group->group('/admin', function (Group $group) {
             $group->group('/student', function (Group $student) {
@@ -86,11 +104,15 @@ return function (App $app) {
         });
         //->add(AuthenticateUserMiddleware::class);
 
-        $group->group('/token', function (Group $group) {
-            $group->get('/csrf', GenerateTokenCSRFMiddleware::class);
-            $group->get('/recaptcha/{token}', RecaptchaMiddleware::class);
-            $group->get('/forgotPassword/{token}', ValidateTokenJWTMiddleware::class);
-            $group->get('/validateTokenJWT/{token}', ValidateTokenJWTMiddleware::class);
+        $group->group('/token', function (Group $token) {
+            $token->get('/csrf', function(Request $request, Response $response){
+                $token = (new GenerateTokenCSRFMiddleware($this->get('database')))->getToken();
+                $response->getBody()->write(json_encode(["statusCode" => 200], JSON_PRETTY_PRINT));
+                return $response->withHeader('Content-Type', 'application/json')->withHeader('Set-Cookie', "X-Csrf-Token=$token; Path=/; HttpOnly; Secure; SameSite=None");
+            });
+            $token->get('/recaptcha/{token}', RecaptchaMiddleware::class);
+            $token->get('/forgotPassword/{token}', ValidateTokenJWTMiddleware::class);
+            $token->get('/validateTokenJWT/{token}', ValidateTokenJWTMiddleware::class);
         });
 
         $group->group('/services', function (Group $services) {

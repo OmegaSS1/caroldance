@@ -2,16 +2,26 @@
 
 namespace App\Application\Middleware;
 
-use Psr\Http\Message\ResponseInterface as Response;
+use App\Database\DatabaseInterface;
 
-class GenerateTokenCSRFMiddleware extends ActionMiddleware {
+class GenerateTokenCSRFMiddleware {
+  private string $token;
+  private string $table = 'token_csrf'; 
 
-  protected string $table = 'token_csrf'; 
-  protected function action(): Response {
+  public function __construct(DatabaseInterface $database){
+    $this->token = bin2hex(random_bytes(32));
 
-    $token = $this->generateTokenCSRF(IP);
+		if (!!$database->select('token', $this->table, "ip = '" . IP . "'"))
+			$database->update($this->table, ['token' => $this->token], "ip = '" . IP . "'");
+		else
+			$database->insert($this->table, ['ip' => IP, 'token' => $this->token]);
 
-    return $this->respondWithData()->withHeader('Set-Cookie', "X-Csrf-Token=$token; Path=/; HttpOnly; Secure; SameSite=None");
+		$database->commit();
 
   }
+
+  public function getToken(): string {
+    return $this->token;
+  }
+
 }

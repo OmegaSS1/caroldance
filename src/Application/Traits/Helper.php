@@ -52,65 +52,35 @@ use MercadoPago\SDK;
 use MercadoPago\Item;
 use MercadoPago\Preference;
 
-
 trait Helper
 {
 
-	/**
-	 * Remove toda tag de sql.
-	 *
-	 * @param array $form Conteudo a ser verificado.
-	 * @return array
-	 */
-	public function removeSQLInjection(array $form): array
-	{
-		$search = array('create', 'insert into', 'select', 'update', 'delete', 'where', ' and ', ' or ', ' not ', 'order', 'limit', 'group', 'by', 'inner', 'join', ' on ', 'union', 'min ', 'max', 'like', '[*]', 'from', '<', '>', 'script', 'svg', 'onload');
-		foreach ($search as $s) {
-			foreach ($form as $key => $value) {
-				if (is_string($value)) {
-					preg_match("/$s/i", $value, $matches);
-					if (!empty($matches)) {
-						$this->logger->warning("[Helper - (removeSQLInjection) ID {$this->USER->data->id} IP " . IP . "] Tentativa de SQLInjection!", [$value]);
-						$value = str_replace($matches[0], '', $value);
-					}
-					$form[$key] = trim(preg_replace("/\s+/", ' ', $value));
-				}
-			}
-		}
-		return $form;
-	}
+	
 
-	public function validKeysForm(array $form, array $keys)
+	/**
+	 * Verifica se a chave existe, vazio ou < 0
+	 * @param array $form Dados do client
+	 * @param array $keys Chaves do array
+	 * @return void
+	 * @throws CustomDomainException
+	 */
+	public function validKeysForm(array $form, array $keys): void
 	{
 		foreach ($keys as $k) {
 			if (!isset($form[$k])) {
-				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP " . IP . "] Parametros incompletos!", $form);
-				throw new Exception("É obrigatório informar o campo " . strtoupper($k));
-			} else if ($form[$k] == "") {
-				$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP " . IP . "] Parametros incompletos!", $form);
-				throw new Exception("É obrigatório informar o campo " . strtoupper($k));
-			} else if (is_float($form[$k]) or is_int($form[$k])) {
+				throw new CustomDomainException("É obrigatório informar o campo " . strtoupper($k));
+			} 
+			else if ($form[$k] == "") {
+				throw new CustomDomainException("É obrigatório informar o campo " . strtoupper($k));
+			} 
+			else if (is_float($form[$k]) or is_int($form[$k])) {
 				if ($form[$k] < 0) {
-					$this->logger->info("[Helper (validKeysForm) ID {$this->USER->data->id} - IP " . IP . "] Parametros incompletos!", $form);
-					throw new Exception("O valor do campo " . strtoupper($k) . " não pode ser menor que 0");
+					throw new CustomDomainException("O valor do campo " . strtoupper($k) . " não pode ser menor que 0");
 				}
 			}
+			else if(is_array($form[$k]))
+				$this->validKeysForm($form[$k], array_keys($form[$k]));
 		}
-	}
-
-	public function generateTokenCSRF(string $ip_request): string
-	{
-		$token = bin2hex(random_bytes(32));
-		$table = 'token_csrf';
-
-		if (!!$this->database->select('token', $table, "ip = '$ip_request'"))
-			$this->database->update($table, ['token' => $token], "ip = '$ip_request'");
-		else
-			$this->database->insert($table, ['ip' => $ip_request, 'token' => $token]);
-
-		$this->database->commit();
-
-		return $token;
 	}
 
 	public function sendWPPMessage()
@@ -224,15 +194,19 @@ trait Helper
 	 * Verifica se o CPF é válido.
 	 * @param string $cpf
 	 * @return string
-	 * @throws Exception 
+	 * @throws CustomDomainException 
 	 */
-	public function isCPF(string $cpf): string
+	public function isCPF(?string $cpf): string
 	{
-		if (empty($cpf) or strlen($cpf) < 11)
-			throw new Exception('O CPF informado está inválido!');
-		else if (preg_match('/(\d)\1{10}/', $cpf))
-			throw new Exception('O CPF informado está inválido!');
+		if (!$cpf)
+			throw new CustomDomainException('O CPF informado está inválido!');
+
 		$cpf = preg_replace('/\D/', '', (string) $cpf);
+
+		if(strlen($cpf) != 11)
+			throw new CustomDomainException('O CPF informado está inválido!');
+		else if (preg_match('/(\d)\1{10}/', $cpf))
+			throw new CustomDomainException('O CPF informado está inválido!');
 
 
 		$validacao = substr($cpf, 0, 9);
@@ -249,23 +223,27 @@ trait Helper
 		}
 
 		if ($validacao != $cpf)
-			throw new Exception('O CPF informado está inválido!');
+			throw new CustomDomainException('O CPF informado está inválido!');
 		return $cpf;
 	}
 
 	/**
 	 * Verifica se o CPF é válido.
 	 * @param string $cpf
+	 * @throws CustomDomainException 
 	 * @return string
-	 * @throws Exception 
 	 */
 	public function isCNPJ(string $cnpj): string
 	{
-		if (strlen($cnpj) != 14)
-			throw new Exception('O CNPJ informado está inválido!', 400);
-		else if (preg_match('/(\d)\1{13}/', $cnpj))
-			throw new Exception('O CNPJ informado está inválido!');
+		if (!$cnpj)
+			throw new CustomDomainException('O CNPJ informado está inválido!');
+
 		$cnpj = preg_replace('/\D/', '', (string) $cnpj);
+		
+		if (strlen($cnpj) != 14)
+			throw new CustomDomainException('O CNPJ informado está inválido!', 400);
+		else if (preg_match('/(\d)\1{13}/', $cnpj))
+			throw new CustomDomainException('O CNPJ informado está inválido!');
 
 		// Valida primeiro dígito verificador
 		for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++) {
@@ -276,7 +254,7 @@ trait Helper
 		$resto = $soma % 11;
 
 		if ($cnpj[12] != ($resto < 2 ? 0 : 11 - $resto))
-			throw new Exception('O CNPJ informado está inválido!', 400);
+			throw new CustomDomainException('O CNPJ informado está inválido!', 400);
 		;
 
 		// Valida segundo dígito verificador
@@ -288,262 +266,85 @@ trait Helper
 		$resto = $soma % 11;
 
 		if ($cnpj[13] != ($resto < 2 ? 0 : 11 - $resto))
-			throw new Exception('O CNPJ informado está inválido!', 400);
+			throw new CustomDomainException('O CNPJ informado está inválido!', 400);
 
 		return $cnpj;
 	}
 
 	/**
+	 * Verifica se o email é valido
 	 * @param string $email
+	 * @throws CustomDomainException
 	 * @return string
-	 * @throws Exception
 	 */
 	public function isEmail(string $email): string
 	{
 		if (empty($email))
-			throw new Exception('O EMAIL informado está inválido!');
+			throw new CustomDomainException('O EMAIL informado está inválido!');
 		else if (!filter_var($email, FILTER_VALIDATE_EMAIL))
-			throw new Exception('O EMAIL informado está inválido!');
+			throw new CustomDomainException('O EMAIL informado está inválido!');
 
 		return filter_var($email, FILTER_SANITIZE_EMAIL);
 	}
-	// /**
-	//  * Valida as variaveis de acordo com o tipo solicitado. Consulte @var
 
-	//  * @param string $type Tipo de validação desejada.
-	//  * @param string $length Tamanho permitido pelo banco na coluna.
-	//  * @param string|int $val Conteudo para ser validado.
-	//  * @param string $msg Mensagem em caso de Exception (informe somente o campo).
-	//  * @return true or exception
-	//  */
-	// public static function helpValidator(string $type, string $length = null, string $table = null, string $key = null, string $val, string $msg)
-	// {
-	// 	$format_string = function (string $string): string {
-	// 		return preg_replace(array("/ /", "/á|à|ã|â|ä/", "/(Á|À|Ã|Â|Ä)/", "/(é|è|ê|ë)/", "/(É|È|Ê|Ë)/", "/(í|ì|î|ï)/", "/(Í|Ì|Î|Ï)/", "/(ó|ò|õ|ô|ö)/", "/(Ó|Ò|Õ|Ô|Ö)/", "/(ú|ù|û|ü)/", "/(Ú|Ù|Û|Ü)/", "/(ñ)/", "/(Ñ)/", "/(ç)/"), explode(" ", " a A e E i I o O u U n N c"), $string);
-	// 	};
+	/**
+	 * Valida a data de aniversario e verifica se esta
+	 * dentro do range solicitado
+	 * @param string $birthDate
+	 * @param int $minAllowYear
+	 * @param int $maxAllowYear
+	 * @return void
+	 * @throws CustomDomainException
+	 */
+	public function isBirthDate(?string $birthDate, int $minAllowYear = 0, int $maxAllowYear = 125): void {
+		if(!$birthDate)
+			throw new CustomDomainException('A data de nascimento informada está inválida!');
 
-	// 	$exception = "O campo " . strtoupper($msg) . " está incorreto!";
-	// 	$empty     = "O campo " . strtoupper($msg) . " não foi preenchido!";
-	// 	$unique    = "Já existe um usuário cadastrado com este " . strtoupper($msg) . ".
-	// 	Verifique o número digitado, efetue a correção necessária e tente novamente.";
+		$years = $this->diffBetweenDatetimes(date('Y-m-d'), $birthDate, 'y');
+        [$year, $month, $day] = explode('-', $birthDate);
 
-	// 	switch (strtoupper($type)) {
-	// 			## Validação de banco de dados
-	// 			# Flags
-	// 		case 'UNIQUE_KEY':
-	// 			$response = DB::select($key, $table, "$key = '$val'");
-	// 			if (!empty($response)) throw new Exception($unique, 400);
-	// 			break;
+        if (!checkdate((int)$month, (int)$day, (int)$year)) {
+            throw new CustomDomainException('A data de nascimento informada está inválida!');
+        }
+		if($minAllowYear > 0) {
+			if ($years < $minAllowYear) {
+				throw new CustomDomainException("É necessário ter mais de $minAllowYear anos!");
+        	}
+		}
+		if($maxAllowYear > 0){
+			if ($years > $maxAllowYear) {
+				throw new CustomDomainException("É necessário ter menos de $maxAllowYear anos!");
+        	}
+		}
+	}
 
-	// 		case 'NOT_NULL':
-	// 		case 'EMPTY':
-	// 			if ($val == "") throw new Exception($empty, 400);
-	// 			break;
+	/**
+	 * Verifica se o numero de telefone é valido (Fixo e Celular)
+	 * 
+	 * @param string $phoneNumber
+	 * @return string
+	 * @throws CustomDomainException
+	 */
+	public function isPhoneNumber(?string $phoneNumber): string {
+		if(!$phoneNumber)
+			throw new CustomDomainException('Numero de celular inválido!');
+		
+		$phoneNumber = preg_replace('/\D/', '', $phoneNumber);
 
-	// 			# Type DATABASE
-	// 		case 'BIT':
-	// 		case 'TINY':
-	// 		case 'TINYINT':
-	// 			if (!ctype_digit($val) || $val < 0 || $val > 127) throw new Exception($exception, 400);
-	// 			break;
+		$cellPhone = "/^(\d{2})(9{1})\d{8}$/";
+		$phone     = "/^(\d{2})\d{8}$/";
 
-	// 		case 'SHORT':
-	// 		case 'SMALLINT':
-	// 			if (!ctype_digit($val) || $val < 0 || $val > 32767) throw new Exception($exception, 400);
-	// 			break;
-
-	// 		case 'INT24':
-	// 		case 'MEDIUMINT':
-	// 			if (!ctype_digit($val) || $val < 0 || $val > 8388607) throw new Exception($exception, 400);
-	// 			break;
-
-	// 		case 'LONG':
-	// 		case 'INT':
-	// 		case 'INTEGER':
-	// 			if (!ctype_digit($val) || $val < 0 || $val > 2147483647) throw new Exception($exception, 400);
-	// 			break;
-
-	// 		case 'LONGLONG':
-	// 		case 'BIGINT':
-	// 			if (!ctype_digit($val) || $val < 0 || $val > 9223372036854775807) throw new Exception($exception, 400);
-	// 			break;
-
-	// 		case 'BOOLEAN':
-	// 			$val = $val == '1' ? true : ($val == '0' ? false : $val);
-	// 			if (!is_bool($val)) throw new Exception($exception, 400);
-	// 			break;
-
-	// 		case 'BLOB':
-	// 		case 'STRING':
-	// 		case 'VAR_STRING':
-	// 			$val = $format_string($val);
-	// 			if (!is_null($length) && strlen($val) > $length) throw new Exception($length, 400);
-	// 			break;
-
-	// 		case 'DATE':
-	// 		case 'DATETIME':
-	// 		case 'TIME':
-	// 		case 'TIMESTAMP':
-	// 			if (!DateTime::createFromFormat('Y-m-d', $val)) throw new Exception($exception, 400);
-	// 			// else if ($val > date('Y-m-d H:i:s')) throw new Exception($exception, 400);
-	// 			break;
-	// 			##
-
-	// 			## Validação de caracteres
-	// 		case 'NOME':
-	// 		case 'ALPHA':
-	// 			$val = $format_string($val);
-	// 			if (!preg_replace('/\s+/', '', ctype_alpha($val))) throw new Exception("Não é permitido o uso de caracteres especiais para o campo '$msg'!", 400);
-	// 			break;
-
-	// 		case 'ALNUM':
-	// 			$val = $format_string($val);
-	// 			if (!ctype_alnum($val)) throw new Exception("O campo $msg deve conter somente letras e números!", 400);
-	// 			break;
-
-	// 		case 'ONLYFLOAT':
-	// 			$val = preg_match("/\./", $val) ? (float) $val : $val;
-	// 			if (!is_float($val)) throw new Exception("O campo $msg deve conter somente números flutuantes!", 400);
-	// 			break;
-	// 			##
-
-	// 			## Validação de Documentos
-	// 		case 'CPF':
-	// 			if (empty($val) or strlen($val) < 11) throw new Exception('CPF inválido!', 400);
-	// 			if (preg_match('/(\d)\1{10}/', $val)) throw new Exception('CPF inválido!', 400);
-	// 			$cpf = preg_replace('/\D/', '', $val);
-
-
-	// 			$validacao = substr($cpf, 0, 9);
-
-	// 			for ($i = 0; $i < 2; $i++) {
-	// 				$calculo = strlen($validacao) + 1;
-	// 				$soma = 0;
-
-	// 				for ($c = 0; $c < strlen($validacao); $c++) {
-	// 					$soma += $validacao[$c] * $calculo;
-	// 					$calculo--;
-	// 				}
-	// 				$validacao .= $soma % 11 > 1 ? 11 - ($soma % 11) : 0;
-	// 			}
-
-	// 			if ($validacao != $cpf) throw new Exception('CPF inválido!', 400);
-	// 			return $cpf;
-	// 			break;
-
-	// 		case 'CNPJ':
-	// 			$cnpj = preg_replace('/[^0-9]/', '', (string) $val);
-	// 			$invalidos = [
-	// 				'00000000000000',
-	// 				'11111111111111',
-	// 				'22222222222222',
-	// 				'33333333333333',
-	// 				'44444444444444',
-	// 				'55555555555555',
-	// 				'66666666666666',
-	// 				'77777777777777',
-	// 				'88888888888888',
-	// 				'99999999999999'
-	// 			];
-	// 			if (strlen($cnpj) != 14) throw new Exception('O CNPJ informado está inválido!', 400);
-	// 			if (in_array($cnpj, $invalidos)) throw new Exception('O CNPJ informado está inválido!', 400);
-
-	// 			// Valida primeiro dígito verificador
-	// 			for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++)
-	// 			{
-	// 				$soma += $cnpj[$i] * $j;
-	// 				$j = ($j == 2) ? 9 : $j - 1;
-	// 			}
-
-	// 			$resto = $soma % 11;
-
-	// 			if ($cnpj[12] != ($resto < 2 ? 0 : 11 - $resto))
-	// 				throw new Exception('O CNPJ informado está inválido!', 400);;
-
-	// 			// Valida segundo dígito verificador
-	// 			for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++)
-	// 			{
-	// 				$soma += $cnpj[$i] * $j;
-	// 				$j = ($j == 2) ? 9 : $j - 1;
-	// 			}
-
-	// 			$resto = $soma % 11;
-
-	// 			if($cnpj[13] != ($resto < 2 ? 0 : 11 - $resto))
-	// 				throw new Exception('O CNPJ informado está inválido!', 400);
-
-	// 			break;
-	// 			// $validacao = substr($cnpj, 0, 12);
-
-	// 			// for ($i = 0; $i < 2; $i++) {
-	// 			// 	$calculo = 9;
-	// 			// 	$soma = 0;
-
-	// 			// 	for ($c = (strlen($validacao) - 1); $c >= 0; $c--) {
-	// 			// 		$soma += $validacao[$c] * $calculo;
-	// 			// 		$calculo--;
-	// 			// 		$calculo = $calculo < 2 ? 9 : $calculo;
-	// 			// 	}
-	// 			// 	$validacao .= $soma % 11;
-	// 			// }
-
-	// 			// if ($validacao != $cnpj) throw new Exception('CNPJ inválido!', 400);
-	// 			// return $cnpj;
-	// 			// break;
-
-	// 		case 'EMAIL':
-	// 			if (empty($val)) throw new Exception('O campo EMAIL está em branco!', 400);
-
-	// 			$email = filter_var($val, FILTER_SANITIZE_EMAIL);
-	// 			if (!filter_var($email, FILTER_VALIDATE_EMAIL)) throw new Exception('Email inválido!', 400);
-	// 			break;
-
-	// 		case 'PASSWORD':
-	// 			$forcePassword = ['letras maiúsculas' => '[A-Z]', 'letras minúsculas' => '[a-z]', 'números' => '[0-9]', 'caracteres especiais' => '[-!$%#^&*()@_+{}~=`\[\]:;<>?.,|\'\"]'];
-	// 			foreach ($forcePassword as $exception => $force) {
-	// 				preg_match("/$force/", $val, $matches);
-	// 				if (empty($matches)) throw new Exception("A senha deve conter $exception!");
-	// 			}
-	// 			if (strlen($val) < $length) throw new Exception("A senha deve conter um mínimo de $length caracteres!");
-	// 			break;
-
-	// 		case str_starts_with($type, 'TELEFONE'):
-	// 			$val = preg_replace('/\D/', '', $val);
-	// 			if (strlen($val) < 10) throw new Exception("O $msg está incompleto!");
-	// 			break;
-	// 	}
-	// }
-
-	// /**
-	//  * Recupera a estrutura da tabela
-	//  *
-	//  * @param array $post Requisição HTTP POST da aplicação. (As chaves devem ser iguais as colunas da tabela no banco)
-	//  * @param array $message Mensagem de erro. Ex.: ["nome" => "NOME"].
-	//  * @param string $table Tabela requisitada.
-	//  * @return true or exception
-	//  */
-	// public static function dbValidation(array $post, array $exception, string $table)
-	// {
-	// 	$meta = DB::getColumnMeta($table);
-	// 	foreach ($post as $k => $v) {
-	// 		foreach ($meta as $m) {
-	// 			if ($k == $m['name'] and in_array($k, array_keys($exception))) {
-	// 				## Valida os tipos da tabela (ex.: VARCHAR, INT, DATE...)
-	// 				self::helpValidator(strtoupper($m['native_type']), $m['len'], null, null, $v, $exception[$k]);
-
-	// 				## Valida de acordo com o nome da tabela (ex.: cpf, email, cnpj...)
-	// 				self::helpValidator(strtoupper($m['name']), null, null, null, $v, $exception[$k]);
-
-	// 				## Valida as flags (ex.: not null, unique...)
-	// 				foreach ($m['flags'] as $flag) {
-	// 					self::helpValidator(strtoupper($flag), null, $table, $k, $v, $exception[$k]);
-	// 				}
-	// 				break;
-	// 			}
-	// 		}
-	// 	}
-	// }
-
+		if(substr($phoneNumber, 2, 1) ==  '9'){
+			if(!preg_match($cellPhone, $phoneNumber))
+				throw new CustomDomainException('Numero de celular inválido!');
+		}
+		else{
+			if(!preg_match($phone, $phoneNumber))
+				throw new CustomDomainException('Numero de telefone inválido!');
+		}
+		return $phoneNumber;
+	}
+	
 	// /**
 	//  * Gera uma senha aleatória junto com o hash da mesma.
 	//  *
@@ -1283,7 +1084,7 @@ trait Helper
 	 */
 	public function post(Request $request): array
 	{
-		return $this->removeSQLINJECTION($request->getParsedBody());
+		return $request->getParsedBody();
 	}
 
 	// public function exportZip(Request $request, Response $response): Response {

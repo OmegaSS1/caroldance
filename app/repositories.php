@@ -3,19 +3,23 @@
 declare(strict_types=1);
 
 use App\Domain\ActivityStudent\ActivityStudentRepository;
+use App\Domain\ClientTicket\ClientTicketRepository;
 use App\Domain\Local\LocalRepository;
 use App\Domain\MonthlyPayment\MonthlyPaymentRepository;
 use App\Domain\ProfileUser\ProfileUserRepository;
 use App\Domain\Responsible\ResponsibleRepository;
 use App\Domain\Student\StudentRepository;
+use App\Domain\Ticket\TicketRepository;
 use App\Domain\User\UserRepository;
 
 use App\Infrastructure\Persistence\ActivityStudent\DataActivityStudentRepository;
+use App\Infrastructure\Persistence\ClientTicket\DataClientTicketRepository;
 use App\Infrastructure\Persistence\Local\DataLocalRepository;
 use App\Infrastructure\Persistence\MonthlyPayment\DataMonthlyPaymentRepository;
 use App\Infrastructure\Persistence\ProfileUser\DataProfileUserRepository;
 use App\Infrastructure\Persistence\Responsible\DataResponsibleRepository;
 use App\Infrastructure\Persistence\Student\DataStudentRepository;
+use App\Infrastructure\Persistence\Ticket\DataTicketRepository;
 use App\Infrastructure\Persistence\User\DataUserRepository;
 
 use App\Database\DatabaseInterface;
@@ -34,6 +38,9 @@ return function (ContainerBuilder $containerBuilder) {
         ActivityStudentRepository::class => \DI\autowire(DataActivityStudentRepository::class),
         LocalRepository::class           => \DI\autowire(DataLocalRepository::class),
         MonthlyPaymentRepository::class  => \DI\autowire(DataMonthlyPaymentRepository::class),
-        "html"                       => \DI\autowire(View::class)
+        ClientTicketRepository::class    => \DI\autowire(DataClientTicketRepository::class),
+        TicketRepository::class          => \DI\autowire(DataTicketRepository::class),
+        "html"                           => \DI\autowire(View::class),
+        "database"                       => \DI\autowire(DatabaseManager::class),
     ]);
 };

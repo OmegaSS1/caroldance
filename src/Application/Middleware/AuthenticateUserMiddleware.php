@@ -59,7 +59,9 @@ class AuthenticateUserMiddleware implements Middleware {
     $request = $request->withAttribute('USER', $decode_token);
 
     $tokenJWT = (new GenerateTokenJWTMiddleware($decode_token->iss, $decode_token->data->id))->getToken();
-    $tokenCSRF = $this->generateTokenCSRF(IP);
+    $tokenCSRF = (new GenerateTokenCSRFMiddleware($this->database))->getToken();
+
+    
 
     return $handler->handle($request)
     ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None")

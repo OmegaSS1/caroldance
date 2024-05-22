@@ -29,6 +29,9 @@ class DatabaseManager implements DatabaseInterface {
   public function delete(string $table, array $values){
     return $this->getConnection('mysql')->delete($table, $values);
   }
+  public function runSelect($sql){
+    return $this->getConnection('mysql')->runSelect($sql);
+  }
   public function commit(){
     return $this->getConnection('mysql')->commit();
   }

@@ -8,5 +8,5 @@ use App\Domain\DomainException\DomainRecordNotFoundException;
 
 class StudentNotFoundException extends DomainRecordNotFoundException
 {
-    public $message = '[Student (NOTFOUND)] - O Aluno não foi localizado!';
+    public $message = 'O Aluno não foi localizado!';
 }

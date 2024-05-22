@@ -8,5 +8,7 @@ interface DatabaseInterface {
   public function update(string $table, array $values, $where, $and = "");
   public function insert(string $table, array $values);
   public function delete(string $table, array $values);
+  public function runSelect($sql);
+
   public function commit();
 }

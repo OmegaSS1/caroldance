@@ -9,7 +9,6 @@ use App\Domain\User\UserNotFoundException;
 use App\Domain\User\UserRepository;
 
 use App\Database\DatabaseInterface;
-use Psr\Log\LoggerInterface;
 
 class DataUserRepository implements UserRepository
 {
@@ -17,14 +16,12 @@ class DataUserRepository implements UserRepository
      * @var User[]
      */
     private array $users = [];
-    private LoggerInterface $logger;
 
     /**
      * @param DatabaseInterface $database
      */
-    public function __construct(DatabaseInterface $database, LoggerInterface $logger)
+    public function __construct(DatabaseInterface $database)
     {
-        $this->logger = $logger;
         $data = $database->select('*', 'usuario');
         foreach ($data as $v){
             $this->users[$v['id']] = new User(

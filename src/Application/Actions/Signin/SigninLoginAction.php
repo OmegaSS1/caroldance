@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Signin;
 
+use App\Application\Middleware\GenerateTokenCSRFMiddleware;
 use App\Application\Middleware\GenerateTokenJWTMiddleware;
 use App\Domain\DomainException\CustomDomainException;
 use App\Domain\User\UserNotFoundException;
@@ -25,7 +26,8 @@ class SigninLoginAction extends SigninAction
     }
 
     $tokenJWT = (new GenerateTokenJWTMiddleware(IP, $user->getId()))->getToken();
-    $tokenCSRF = $this->generateTokenCSRF(IP);
+    $tokenCSRF = (new GenerateTokenCSRFMiddleware($this->database))->getToken();
+
 
     return $this->respondWithData(["responsavel" => $haveAluno])
     ->withHeader('Set-Cookie', "Authorization=$tokenJWT; Path=/; HttpOnly; Secure; SameSite=None")
