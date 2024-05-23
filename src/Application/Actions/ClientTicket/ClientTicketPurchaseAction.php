@@ -12,7 +12,8 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $form = $this->validateForm($this->post($this->request));
 
         $ticketMail = "<b>Ingressos: </b><br><br>";
-        $vTotal = 0;
+        $vTotal     = (array_count_values($form['assentos'])['30'] ?? 0) * 30;
+
         foreach($form['assentos'] as $k => $v){
             $this->database->insert('cliente_ingresso', [
                 "aluno_id" => $form['aluno'],
@@ -23,7 +24,8 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
                 "valor" => (int) $v,
                 "tipo"  => (int) $v === 0 ? 'Cortesia' : 'Pago',
                 "periodo" => $form['periodo'],
-                "estacionamento" => $form['estacionamento']
+                "estacionamento" => $form['estacionamento'],
+                "status_pagamento" => ($vTotal == 0 ? "Concluido": "Pendente")
             ]);
 
             
@@ -34,7 +36,6 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
                     $ticketMail .= "<br>";
                     break;
                 default:
-                    $vTotal += 30;
                     $ticketMail .= "Assento $seatName - R$" . $v;
                     $ticketMail .= "<br>";
             }
@@ -46,11 +47,11 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         WhatsApp: (71) 98690-4826<br><br>
         $ticketMail <br><br>
         <b>Dados: </b><br><br>
-        Status: <b>Aguardando Pagamento</b><br>
+        Status: <b>" . ($vTotal == 0 ? "Pago </b><br>" : "Aguardando Pagamento </b><br>") . "
         Data do Pedido: " . date('H:i:s d-m-Y') . "<br>
-        Forma de Pagamento: PIX <br>
-        Valor Total: $vTotal <br>
-        Sessão: " . explode('SESSAO', $form['periodo'])[1];
+        " . ($vTotal == 0 ? "" : "Forma de Pagamento: PIX <br>") . "
+        Valor Total: R$$vTotal <br>
+        Valido para: " . $form['periodo'];
 
 
         $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]]);
