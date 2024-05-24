@@ -8,6 +8,7 @@ use App\Application\Actions\ClientTicket\ClientTicketConfirmPurchaseAction;
 use App\Application\Actions\ClientTicket\ClientTicketPurchaseAction;
 use App\Application\Actions\ClientTicket\ClientTicketListAction;
 use App\Application\Actions\ClientTicket\ClientTicketListSeatsAction;
+use App\Application\Actions\ClientTicket\Teste;
 use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
 use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
 use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction, UserExportAction};
@@ -78,6 +79,8 @@ return function (App $app) {
             $clientTicket->group('/seat', function(Group $seat) {
                 $seat->get('', ClientTicketListSeatsAction::class);
             });
+            $clientTicket->get('/testemail', Teste::class);
+
             
         });
 

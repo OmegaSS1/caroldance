@@ -56,7 +56,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         Valido para: " . $form['periodo'];
 
 
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]]);
+        // $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]]);
         $this->database->commit();
 
         return $this->respondWithData();
@@ -76,7 +76,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $totalPayTicketsClient  = array_count_values($form['assentos'])['30'] ?? 0;
         $totalFreeTicketsClient = array_count_values($form['assentos'])['0']  ?? 0;
 
-        $this->studentRepository->findStudentById((int)$form['aluno']);
+        $student = $this->studentRepository->findStudentById((int)$form['aluno']);
 
         // Verifica se ultrapassou o limite dos ingressos e estacionamento
         $totalDBClientTickets  = $this->clientTicketRepository->findTotalClientTicketByPeriod($form['periodo']);
@@ -125,8 +125,10 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
                 }
             }
             if($quantityFreeTickets + $totalFreeTicketsClient > $limitFreeTicketPerStudent){
-                $avaible = $limitFreeTicketPerStudent - $quantityFreeTickets;
-                throw new CustomDomainException("São permitidos até $limitFreeTicketPerStudent ingressos cortesias por aluno! O mesmo possui $avaible ingresso(s) cortesia disponivel");
+                if($student->getId() != 201 and date('d-m-Y') < '26-05-2024'){
+                    $avaible = $limitFreeTicketPerStudent - $quantityFreeTickets;
+                    throw new CustomDomainException("São permitidos até $limitFreeTicketPerStudent ingressos cortesias por aluno! O mesmo possui $avaible ingresso(s) cortesia disponivel");
+                }
             }
             else if(count($quantityUsedParking) > 0 and in_array($form['periodo'], $quantityUsedParking)){
                 throw new CustomDomainException("Para esta Sessão, a vaga do estacionamento já foi solicitada!");
