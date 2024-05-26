@@ -63,7 +63,8 @@ class DataClientTicketRepository implements ClientTicketRepository
             sum(cli.valor) AS Valor,
             CONCAT(al.nome, ' ', al.sobrenome) AS Aluna,
             cli.status_pagamento AS Status,
-            periodo AS Sessao
+            periodo AS Sessao,
+            IF(estacionamento, 'SIM', 'NÃO') Estacionamento
         FROM cliente_ingresso cli
         JOIN aluno al ON al.id = cli.aluno_id
         JOIN ingressos i ON i.id = cli.ingresso_id

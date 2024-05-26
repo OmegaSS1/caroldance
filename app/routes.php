@@ -8,6 +8,7 @@ use App\Application\Actions\ClientTicket\ClientTicketConfirmPurchaseAction;
 use App\Application\Actions\ClientTicket\ClientTicketPurchaseAction;
 use App\Application\Actions\ClientTicket\ClientTicketListAction;
 use App\Application\Actions\ClientTicket\ClientTicketListSeatsAction;
+use App\Application\Actions\ClientTicket\ClientTicketValidateTicketAction;
 use App\Application\Actions\ClientTicket\Teste;
 use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
 use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
@@ -43,16 +44,18 @@ return function (App $app) {
     });
     $app->group('/caroldance', function (Group $group) {
 
-        $group->group('/teste', function (Group $group) {
-            $group->post('/csrf', function (Request $request, Response $response) {
+        $group->group('/teste', function (Group $teste) {
+            $teste->post('', Teste::class);
+
+            $teste->post('/csrf', function (Request $request, Response $response) {
                 $response->getBody()->write('Deu certo');
                 return $response;
             });
-            $group->get('/jwt', function (Request $request, Response $response) {
+            $teste->get('/jwt', function (Request $request, Response $response) {
                 $response->getBody()->write('Deu certo');
                 return $response;
             })->add(AuthenticateUserMiddleware::class);
-            $group->post('/csrfjwt', function (Request $request, Response $response) {
+            $teste->post('/csrfjwt', function (Request $request, Response $response) {
                 $response->getBody()->write('Deu certo');
                 return $response;
             })->add(AuthenticateUserMiddleware::class);
@@ -75,12 +78,11 @@ return function (App $app) {
                 $ticket->put('/cancel', ClientTicketCancelPurchaseAction::class);
                 $ticket->put('/confirm', ClientTicketConfirmPurchaseAction::class);
                 $ticket->get('', ClientTicketListAction::class);
+                $ticket->post('/validateTicket', ClientTicketValidateTicketAction::class);
             });
             $clientTicket->group('/seat', function(Group $seat) {
                 $seat->get('', ClientTicketListSeatsAction::class);
             });
-            $clientTicket->get('/testemail', Teste::class);
-
             
         });
 

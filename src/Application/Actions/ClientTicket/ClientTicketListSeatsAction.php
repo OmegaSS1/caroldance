@@ -63,90 +63,6 @@ class ClientTicketListSeatsAction extends ClientTicketAction {
         }
 
         return $this->respondWithData($data);
-
-        // foreach($sessoes as $k => $sessao){
-        //     foreach($tickets as $k => $v){
-        //         $seatInfo = [
-        //             "id" => 2,
-        //             "name" => $v->getAssento(),
-        //             "disponivel" => false,
-        //             "valor" => 0
-        //         ];
-        //         $data[trim(explode('SESSAO', $sessao)[1])][] = $seatInfo;
-
-                // $initialLetter = $v->getLetra();
-
-        //         if($initialLetter != $finalLetter){
-        //             if(in_array($finalLetter, $lettersWithX)){
-        //                 $l = $letter[0];
-        //                 unset($letter[0]);
-        //                 $impar = ['X', $finalLetter];
-        //                 $par   = ['X', $finalLetter];
-        //                 foreach($impar as $i){
-        //                     $add = [
-        //                         "id" => 2,
-        //                         "name" => $i,
-        //                         "disponivel" => false,
-        //                         "valor" => 0
-        //                     ];
-        //                     array_unshift($letter, $add);
-        //                 }
-
-        //                 array_unshift($letter,["id" => 1,"name" => $l['name'],"disponivel" => $l['disponivel'],"valor" => $l['valor']]);
-        //                 foreach($par as $i){
-        //                     $add = [
-        //                         "id" => 1,
-        //                         "name" => $i,
-        //                         "disponivel" => false,
-        //                         "valor" => 0
-        //                     ];
-        //                     array_unshift($letter, $add);
-        //                 }
-        //             }
-        //             else{
-        //                 for($i=1; $i > -1; $i--){
-        //                     $add = [
-        //                         "id" => $i,
-        //                         "name" => $finalLetter,
-        //                         "disponivel" => false,
-        //                         "valor" => 0
-        //                     ];
-        //                     array_unshift($letter, $add);
-
-        //                 }
-        //             }
-
-        //             $data[trim(explode('SESSAO', $sessao)[1])][] = $letter;
-        //             $letter = [];
-        //         }
-
-        //         $valor     = 0;
-        //         $isAvaible = true;
-        //         if($seat = $this->clientTicketRepository->findClientTicketBySeatId($v->getId())){
-        //             foreach($seat as $s){
-        //                 if($s->getStatus() == 1 and $s->getPeriodo() == $sessao){
-        //                     $isAvaible = false;
-        //                     $valor     = $s->getValor();
-        //                 }
-        //             }
-        //         }
-        //         else {
-        //             if(!in_array($v->getLetra(), $freeSeats)){
-        //                 $valor = 30;
-        //             }
-        //         }
-
-        //         $letter[] = [
-        //             "id" => $v->getId(),
-        //             "name" => $v->getAssento(),
-        //             "disponivel" => $isAvaible,
-        //             "valor" => $valor
-        //         ];
-
-        //         $finalLetter = $v->getLetra();
-            // }
-        // }
-
     }
 
     private function seatsInfo(&$data, $sessao, $letter, $freeSeats){
@@ -166,7 +82,7 @@ class ClientTicketListSeatsAction extends ClientTicketAction {
                 if(!in_array($letter, $freeSeats))
                     $valor = 30;
             }
-            $data[$k] = ["id" => $v->getId(), "name" => $v->getAssento(), "disponivel" => $isAvaible, "valor" => $valor];
+            $data[$k] = ["id" => $v->getId(), "name" => $v->getAssento(), "disponivel" => $isAvaible, "valor" => 30];
 
         }
     }

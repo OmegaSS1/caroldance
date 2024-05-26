@@ -22,7 +22,7 @@ return function (ContainerBuilder $containerBuilder) {
                     'level' => Logger::DEBUG,
                 ],
                 "memory_limit" => '256M',
-                "max_execution_time" => "90",
+                "max_execution_time" => "300",
                 "mb_internal_encoding" => "UTF-8",
                 "locale" => [
                     "category" => LC_ALL,

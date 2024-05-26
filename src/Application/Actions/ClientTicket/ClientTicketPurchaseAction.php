@@ -56,7 +56,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         Valido para: " . $form['periodo'];
 
 
-        // $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]]);
+        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com']);
         $this->database->commit();
 
         return $this->respondWithData();

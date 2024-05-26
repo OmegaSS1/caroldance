@@ -390,7 +390,9 @@ trait Helper
 		bool $includeAttachment = false,
 		array $attachmentPath = [],
 		bool $includeImage = false,
-		string $imagePath = ""
+		string $imagePath = "",
+		bool $includeStringAttachment = false,
+		array $stringAttachments = []
 	) {
 		$mail = new PHPMailer(true);
 
@@ -426,6 +428,10 @@ trait Helper
 			foreach ($attachmentPath as $attachment)
 				$mail->addAttachment($attachment);
 		}
+		if($includeStringAttachment){
+			foreach($stringAttachments as $k => $stringAttachment)
+				$mail->addStringAttachment($stringAttachment['data'], $stringAttachment['name'], $stringAttachment['typeMIME'], $stringAttachment['typeImage']);
+		}
 
 		if ($includeImage) {
 			$mail->AddEmbeddedImage($imagePath, 'image');
@@ -437,7 +443,7 @@ trait Helper
 			$mail->send();
 			return true;
 		} catch (PHPMailerException $e) {
-			$this->logger->error("[Helper - ID {$this->USER->data->id} IP " . IP . "]", ["message" => $e->getMessage(), "code" => $e->getCode(), "file" => $e->getFile(), "line" => $e->getLine()]);
+			$this->logger->error("[Helper - ID {$this->USER->data->id} IP " . IP . "]", ["message" => $e->getMessage(), "code" => $e->getCode(), "file" => $e->getFile(), "line" => $e->getLine(), "email" => $recipient]);
 			throw new PHPMailerException('Erro ao tentar enviar o email! Tente novamente mais tarde.', 400);
 		}
 	}
