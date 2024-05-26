@@ -43,13 +43,19 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
             }
         }
 
-        
+        $estacionamento = "";
+        if($form['estacionamento'] == '1'){
+            $estacionamento .= "Estacionamento: R$15<br><br>";
+            $vTotal += 15;
+        }
+
         $pay  = "Recebemos seu pedido com sucesso, estamos aguardando o pagamento via pix e o envio do comprovante via WhatsApp: (71) 98690-4826<br><br>";
         $free = "Recebemos seu pedido com sucesso! 🎉 As suas cortesia(s) já foram enviadas para o seu e-mail. Mal podemos esperar para vê-lo no espetáculo!🌟 <br><br>";
         $bodyMail = "
         <b>Pedido Realizado com Sucesso!</b><br><br>
         ".($vTotal == 0 ? $free : $pay)."
-        $ticketMail <br><br>
+        $ticketMail <br>
+        $estacionamento
         <b>Dados: </b><br><br>
         Status: <b>" . ($vTotal == 0 ? "Pago </b><br>" : "Aguardando Pagamento </b><br>") . "
         Data do Pedido: " . date('H:i:s d-m-Y') . "<br>

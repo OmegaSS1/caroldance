@@ -13,6 +13,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
 
         $ticketMail = "<b>Ingressos: </b><br><br>";
         $vTotal     = 0;
+        $vEstacionamento = 0;
 
         foreach($form['assentos'] as $v){
             $seatName = $this->ticketRepository->findTicketById($v)->getAssento();
@@ -34,6 +35,11 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
                             $ticketMail .= "<br>";
                     }
                     $form['email'] = $data[0]['email'];
+                    if($data[0]['estacionamento'] == '1'){
+                        $estacionamento = "Estacionamento: R$15<br><br>";
+                        $vEstacionamento = 15;
+
+                    }
                 }
             }
             else{
@@ -41,10 +47,12 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
             }
         }
 
+        $vTotal += $vEstacionamento;
         $bodyMail = "
         <b>Pedido Realizado com Sucesso!</b><br><br>
         Recebemos seu pagamento com sucesso! Abaixo estão os dados da sua compra.<br><br>
-        $ticketMail <br><br>
+        $ticketMail <br>
+        $estacionamento
         <b>Dados: </b><br><br>
         Status: <b>Concluído</b><br>
         Data do Pedido: " . date('H:i:s d-m-Y') . "<br>

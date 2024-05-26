@@ -13,7 +13,7 @@ class ClientTicketValidateTicketAction extends ClientTicketAction {
         $form = $this->validateForm($this->post($this->request));
 
         foreach($form['assentos'] as $v){
-            if(!$seat = $this->ticketRepository->findTicketBySeat($v)){
+            if(!$seat = $this->ticketRepository->findTicketBySeat(trim($v))){
                 throw new CustomDomainException('Assento não localizado!');
             }
 
@@ -21,10 +21,14 @@ class ClientTicketValidateTicketAction extends ClientTicketAction {
                 throw new CustomDomainException('Ingressos não localizados!');
             }
             else {
+                if($data[0]['ingresso_validado'] === 0){
+                    $this->database->update('cliente_ingresso', ["ingresso_validado" => 1], "ingresso_id = " . $seat->getId(), "periodo = '{$form['periodo']}' AND status = 1");
+                }
                 $tickets[] = $data[0]['ingresso_validado'];
             }
         }
         
+        $this->database->commit();
         if(in_array(1, $tickets)) $response = false;
         else $response = true;
 
