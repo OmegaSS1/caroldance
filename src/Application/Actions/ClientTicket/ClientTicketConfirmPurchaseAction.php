@@ -30,7 +30,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
                             break;
                         default:
                             $vTotal += 30;
-                            $ticketMail .= "Assento $seatName - R$" . $v;
+                            $ticketMail .= "Assento $seatName - R$ " . $data[0]['valor'];
                             $ticketMail .= "<br>";
                     }
                     $form['email'] = $data[0]['email'];
@@ -43,8 +43,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
 
         $bodyMail = "
         <b>Pedido Realizado com Sucesso!</b><br><br>
-        Recebemos seu pedido com sucesso, estamos aguardando o pagamento via pix e o envio do comprovante via
-        WhatsApp: (71) 98690-4826<br><br>
+        Recebemos seu pagamento com sucesso! Abaixo estão os dados da sua compra.<br><br>
         $ticketMail <br><br>
         <b>Dados: </b><br><br>
         Status: <b>Concluído</b><br>
@@ -53,8 +52,15 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         Valor Total: $vTotal <br>
         Sessão: " . explode('SESSAO', $form['periodo'])[1];
 
+        $decodeBase64 = base64_decode(str_replace('data:image/png;base64,', '', $form['qrcode']));
+        if ($decodeBase64 === false) {
+            throw new CustomDomainException('Decodificação base64 falhou');
+        }
 
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]]);
+        $periodo = str_replace('/', '-', $form['periodo']);
+
+        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], [], false, [], false, '', true, [["data" => $decodeBase64, "name" => $periodo . '.png', "typeMIME" => 'base64', "typeImage" => "image/png"]]);
+
         $this->database->commit();
 
         return $this->respondWithData();

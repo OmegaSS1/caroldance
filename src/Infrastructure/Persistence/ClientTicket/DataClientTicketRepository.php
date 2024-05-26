@@ -58,6 +58,7 @@ class DataClientTicketRepository implements ClientTicketRepository
         SELECT 
             DATE_FORMAT(cli.dh_criacao, '%Y-%m-%d %H:%i') AS 'Data',
             cli.nome AS Nome,
+            cli.cpf AS CPF,
             JSON_ARRAYAGG(i.assento) AS Assento,
             cli.email AS Email,
             sum(cli.valor) AS Valor,

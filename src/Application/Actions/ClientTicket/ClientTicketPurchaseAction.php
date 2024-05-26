@@ -13,6 +13,8 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
 
         $ticketMail = "<b>Ingressos: </b><br><br>";
         $vTotal     = (array_count_values($form['assentos'])['30'] ?? 0) * 30;
+        $fTotal     =  array_count_values($form['assentos'])['0']  ?? 0;
+
 
         foreach($form['assentos'] as $k => $v){
             $this->database->insert('cliente_ingresso', [
@@ -59,7 +61,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com']);
         $this->database->commit();
 
-        return $this->respondWithData();
+        return $this->respondWithData(["cortesias" => $fTotal]);
     }
 
     private function validateForm(array $form): array {
