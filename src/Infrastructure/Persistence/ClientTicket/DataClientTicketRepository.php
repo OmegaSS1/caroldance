@@ -111,7 +111,7 @@ class DataClientTicketRepository implements ClientTicketRepository
     /**
      * {@inheritdoc}
      */
-    public function findTotalClientTicketByParking(): int
+    public function findTotalClientTicketByParking(string $period): int
     {
         $sql = "SELECT COUNT(*) AS total
                 FROM cliente_ingresso 
@@ -120,6 +120,7 @@ class DataClientTicketRepository implements ClientTicketRepository
                     FROM cliente_ingresso 
                     WHERE estacionamento = 1 
                     AND status = 1
+                    AND periodo = '$period'
                     GROUP BY aluno_id) FOR UPDATE";
         return (int) $this->databaseInterface->runSelect($sql)[0]['total'];
     }

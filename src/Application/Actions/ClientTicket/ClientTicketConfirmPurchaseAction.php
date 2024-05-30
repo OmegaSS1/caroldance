@@ -67,7 +67,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
 
         $periodo = str_replace('/', '-', $form['periodo']);
 
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], [], false, [], false, '', true, [["data" => $decodeBase64, "name" => $periodo . '.png', "typeMIME" => 'base64', "typeImage" => "image/png"]]);
+        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com'], false, [], false, '', true, [["data" => $decodeBase64, "name" => $periodo . '.png', "typeMIME" => 'base64', "typeImage" => "image/png"]]);
 
         $this->database->commit();
 

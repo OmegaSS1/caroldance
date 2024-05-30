@@ -37,9 +37,10 @@ interface ClientTicketRepository
     public function findTotalClientTicketByPeriod(string $period);
 
     /**
+     * @param string $period
      * @return int
      */
-    public function findTotalClientTicketByParking();
+    public function findTotalClientTicketByParking(string $period): int;
 
     /**
      * @param array $period

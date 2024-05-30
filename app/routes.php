@@ -3,13 +3,16 @@
 declare(strict_types=1);
 
 use App\Application\Actions\ActivityStudent\{ActivityStudentListAction, ActivityStudentRegisterAction};
-use App\Application\Actions\ClientTicket\ClientTicketCancelPurchaseAction;
-use App\Application\Actions\ClientTicket\ClientTicketConfirmPurchaseAction;
-use App\Application\Actions\ClientTicket\ClientTicketPurchaseAction;
-use App\Application\Actions\ClientTicket\ClientTicketListAction;
-use App\Application\Actions\ClientTicket\ClientTicketListSeatsAction;
-use App\Application\Actions\ClientTicket\ClientTicketValidateTicketAction;
-use App\Application\Actions\ClientTicket\Teste;
+use App\Application\Actions\ClientTicket\{
+    ClientTicketCancelPurchaseAction, 
+    ClientTicketConfirmPurchaseAction, 
+    ClientTicketPurchaseAction, 
+    ClientTicketListAction, 
+    ClientTicketListSeatsAction, 
+    ClientTicketValidateTicketAction,
+    ClientTicketPurchaseParkingAction,
+    Teste};
+
 use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
 use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
 use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction, UserExportAction};
@@ -82,6 +85,9 @@ return function (App $app) {
             });
             $clientTicket->group('/seat', function(Group $seat) {
                 $seat->get('', ClientTicketListSeatsAction::class);
+            });
+            $clientTicket->group('/parking', function(Group $ticket) {
+                $ticket->post('/buy', ClientTicketPurchaseParkingAction::class);
             });
             
         });

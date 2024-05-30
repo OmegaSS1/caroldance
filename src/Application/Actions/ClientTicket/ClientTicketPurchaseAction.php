@@ -88,7 +88,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
 
         // Verifica se ultrapassou o limite dos ingressos e estacionamento
         $totalDBClientTickets  = $this->clientTicketRepository->findTotalClientTicketByPeriod($form['periodo']);
-        $totalDBClientParking  = $this->clientTicketRepository->findTotalClientTicketByParking();
+        $totalDBClientParking  = $this->clientTicketRepository->findTotalClientTicketByParking($form['periodo']);
         $sumTickets            = $totalDBClientTickets + $totalClientTickets;
         $sumParking            = $totalDBClientParking + (int)$form['estacionamento'];
         
@@ -142,12 +142,14 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
                 throw new CustomDomainException("Para esta Sessão, a vaga do estacionamento já foi solicitada!");
             }
             else {
-                $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $quantityFreeTickets + $totalFreeTicketsClient, $form);
+                if($form['aluno'] !== 203)
+                    $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $quantityFreeTickets + $totalFreeTicketsClient, $form);
             }
         }
         else {
             // Libera os gratuitos
-            $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $totalFreeTicketsClient, $form);
+            if($form['aluno'] !== 203)
+                $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $totalFreeTicketsClient, $form);
         }
 
         return $form;
