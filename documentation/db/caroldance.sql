@@ -246,11 +246,15 @@ INSERT INTO ingressos (letra, assento) VALUES
 
 
 CREATE TABLE IF NOT EXISTS estacionamento_ingresso (
-  cliente_ingresso_id INT REFERENCES cliente_ingresso(id),
-  veiculo SET('Carro', 'Moto'),
-  quantidade INT,
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  aluno_id INT REFERENCES aluno(id),
+  periodo VARCHAR(100) NOT NULL,
+  nome VARCHAR(100) NOT NULL,
+  cpf VARCHAR(11) NOT NULL,
+  email VARCHAR(100) NOT NULL,
   valor INT DEFAULT 0,
+  status_pagamento SET('Pendente', 'Em processamento', 'Concluido', 'Falhou', 'Cancelado', 'Estornado') DEFAULT 'Pendente',
   dh_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
   dh_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
-  FOREIGN KEY (cliente_ingresso_id) REFERENCES cliente_ingresso(id)
+  FOREIGN KEY (aluno_id) REFERENCES aluno(id)
 ) ENGINE=InnoDB;

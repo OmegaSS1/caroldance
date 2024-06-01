@@ -19,10 +19,10 @@ interface ParkingTicketRepository
     public function findParkingTicketById(int $id): ParkingTicket;
 
     /**
-     * @param string $ticket
-     * @return mixed
-     * @throws boolean
+     * @param int $alunoId
+     * @param string $period
+     * @return []|ParkingTicket
      */
-    public function findParkingTicketByParkingTicket(string $ticket);
+    public function findParkingTicketByStudentIdAndPeriod(int $alunoId, string $period);
 
 }

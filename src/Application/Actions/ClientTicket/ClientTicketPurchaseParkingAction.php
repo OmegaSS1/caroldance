@@ -11,23 +11,29 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
     protected function action(): Response {
         $form = $this->validateForm($this->post($this->request));
 
-        $this->database->update('cliente_ingresso', [
-            "estacionamento" => 1,
-        ], 
-        "aluno_id = {$form['aluno']}", "periodo = '{$form['periodo']}' AND status = 1");
+        $this->database->insert('estacionamento_ingresso', [
+            "aluno_id" => $form['aluno'],
+            "periodo"  => $form['periodo'],
+            "nome" => $form['nome'],
+            "cpf" => $form['cpf'],
+            "email" => $form['email'],
+            "valor" => 15
+        ]);
 
         $bodyMail = "
         <b>Pedido Realizado com Sucesso!</b><br><br>
         Recebemos seu pedido com sucesso, estamos aguardando o pagamento via pix e o envio do comprovante via WhatsApp: (71) 98690-4826<br><br>
-        Status: Aguardando Pagamento </b><br>
+        <b>Item:</b> <br><br>
+        Estacionamento - R$15 <br><br>
+        Status: <b>Aguardando Pagamento </b><br>
         Data do Pedido: " . date('H:i:s d-m-Y') . "<br>
         Forma de Pagamento: PIX <br>
         Valor Total: R$15 <br>
         Valido para: " . $form['periodo'];
 
 
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com']);
-        // $this->database->commit();
+        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form['email']], [], ['vini15_silva@hotmail.com']);
+        $this->database->commit();
 
         return $this->respondWithData();
     }
@@ -39,29 +45,36 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
 
         $this->studentRepository->findStudentById((int)$form['aluno']);
 
-        if(!!$data = $this->clientTicketRepository->findAll()){
+        $hasClient = false;
+
+        if(!!$data = $this->clientTicketRepository->findClientTicketByStudentId($form['aluno'])){
             foreach($data as $client){
                 if($client->getAlunoId() == (int)$form['aluno'] and $client->getStatus() == 1 and $client->getPeriodo() == $form['periodo']){
-                    if($client->getCpf() != $form['cpf'])
-                        throw new CustomDomainException('O CPF informado é diferente do registrado no pedido dos assentos!');
-                    else if($client->getNome() != $form['nome'])
-                        throw new CustomDomainException('O Nome do comprador é diferente do registrado no pedido dos assentos!');
-                    else if($client->getEstacionamento() == 1){
-                        if($client->getStatusPagamento() == 'Pendente')
-                            throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão.');
-                        else
-                            throw new CustomDomainException("Para este aluno, o estacionamento já foi adquirido.");
+                    if($client->getCpf() == $form['cpf'] and $client->getNome() == $form['nome'] and $client->getEmail() == $form['email']){
+                        if($client->getEstacionamento() == 1){
+                            if($client->getStatusPagamento() == 'Pendente')
+                                throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão.');
+                            else
+                                throw new CustomDomainException("Para este aluno, o estacionamento já foi adquirido nesta sessão.");
+                        }
+                        else if(!!$parking = $this->parkingTicketRepository->findParkingTicketByStudentIdAndPeriod($form['aluno'], $form['periodo'])){
+                            if($parking->getStatusPagamento() == 'Pendente')
+                                throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão!');
+                            else if($parking->getStatusPagamento() == 'Concluido')
+                                throw new CustomDomainException('Para este aluno, o estacionamento já foi adquirido nesta sessão.');
+                        }
+                        else{
+                            $hasClient = true;
+                        }
                     }
-                    else    
-                        break;
                 }
-                else 
-                    throw new CustomDomainException('Nenhum pedido foi encontrado com os dados informados!');
             }
         }
         else 
-            throw new CustomDomainException("Nenhum dado encontrado.");
-        
+            throw new CustomDomainException("Nenhum pedido foi encontrado com os dados informados!");
+
+        if(!$hasClient)
+            throw new CustomDomainException('Nenhum pedido foi encontrado com os dados informados!');
 
         return $form;
     }

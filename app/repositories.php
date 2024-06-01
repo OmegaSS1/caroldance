@@ -6,6 +6,7 @@ use App\Domain\ActivityStudent\ActivityStudentRepository;
 use App\Domain\ClientTicket\ClientTicketRepository;
 use App\Domain\Local\LocalRepository;
 use App\Domain\MonthlyPayment\MonthlyPaymentRepository;
+use App\Domain\ParkingTicket\ParkingTicketRepository;
 use App\Domain\ProfileUser\ProfileUserRepository;
 use App\Domain\Responsible\ResponsibleRepository;
 use App\Domain\Student\StudentRepository;
@@ -16,6 +17,7 @@ use App\Infrastructure\Persistence\ActivityStudent\DataActivityStudentRepository
 use App\Infrastructure\Persistence\ClientTicket\DataClientTicketRepository;
 use App\Infrastructure\Persistence\Local\DataLocalRepository;
 use App\Infrastructure\Persistence\MonthlyPayment\DataMonthlyPaymentRepository;
+use App\Infrastructure\Persistence\ParkingTicket\DataParkingTicketRepository;
 use App\Infrastructure\Persistence\ProfileUser\DataProfileUserRepository;
 use App\Infrastructure\Persistence\Responsible\DataResponsibleRepository;
 use App\Infrastructure\Persistence\Student\DataStudentRepository;
@@ -40,6 +42,7 @@ return function (ContainerBuilder $containerBuilder) {
         MonthlyPaymentRepository::class  => \DI\autowire(DataMonthlyPaymentRepository::class),
         ClientTicketRepository::class    => \DI\autowire(DataClientTicketRepository::class),
         TicketRepository::class          => \DI\autowire(DataTicketRepository::class),
+        ParkingTicketRepository::class   => \DI\autowire(DataParkingTicketRepository::class),
         "html"                           => \DI\autowire(View::class),
         "database"                       => \DI\autowire(DatabaseManager::class),
     ]);

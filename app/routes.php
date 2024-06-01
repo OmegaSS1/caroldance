@@ -11,6 +11,8 @@ use App\Application\Actions\ClientTicket\{
     ClientTicketListSeatsAction, 
     ClientTicketValidateTicketAction,
     ClientTicketPurchaseParkingAction,
+    ClientTicketConfirmPurchaseParkingAction,
+    ClientTicketListParkingAction,
     Teste};
 
 use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
@@ -88,6 +90,8 @@ return function (App $app) {
             });
             $clientTicket->group('/parking', function(Group $ticket) {
                 $ticket->post('/buy', ClientTicketPurchaseParkingAction::class);
+                $ticket->put('/confirm', ClientTicketConfirmPurchaseParkingAction::class);
+                $ticket->get('', ClientTicketListParkingAction::class);
             });
             
         });

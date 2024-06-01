@@ -22,17 +22,19 @@ class DataParkingTicketRepository implements ParkingTicketRepository
      */
     public function __construct(DatabaseInterface $database)
     {
-        $data = $database->select('*', 'ingressos');
+        $data = $database->select('*', 'estacionamento_ingresso');
         foreach ($data as $v){
-            $this->parkingTicket[] = new ParkingTicket(
-                (string) $v['assento'], 
-                (int)    $v['cliente_ingresso_id'], 
-                (int)    $v['valor'],
-                (string) $v['tipo'],
-                (string) $v['periodo'], 
+            $this->parkingTicket[$v['id']] = new ParkingTicket(
+                (int)    $v['id'], 
+                (int)    $v['aluno_id'], 
+                (string) $v['periodo'],
+                (string) $v['nome'],
+                (string) $v['cpf'], 
+                (string) $v['email'], 
+                (int)    $v['valor'], 
                 (string) $v['status_pagamento'], 
                 (string) $v['dh_criacao'], 
-                (string) $v['dh_atualizacao'], 
+                (string) $v['dh_atualizacao'] 
             );
         }
     }
@@ -58,17 +60,14 @@ class DataParkingTicketRepository implements ParkingTicketRepository
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function findParkingTicketByParkingTicket(string $seat)
-    {
-        $parkingTicketArray = array_map(function($v){ return $v->getAssento(); }, $this->parkingTicket);
-        $key = array_search($seat, $parkingTicketArray, true);
-        
-        if ($key === false) {
-            return false;
+    public function findParkingTicketByStudentIdAndPeriod(int $alunoId, string $period){
+        foreach($this->parkingTicket as $k => $parking){
+            if($alunoId == $parking->getAlunoId() and $period == $parking->getPeriodo())
+                return $this->parkingTicket[$k];
         }
 
-        return $this->parkingTicket[$key];
+        return [];
     }
 }

@@ -12,8 +12,6 @@ class ClientTicketListAction extends ClientTicketAction {
 
         $tickets = $this->clientTicketRepository->findAllByQuery();
 
-        
-
         return $this->respondWithData($tickets);
     }
 
