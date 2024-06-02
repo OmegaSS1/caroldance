@@ -25,6 +25,7 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
         Recebemos seu pedido com sucesso, estamos aguardando o pagamento via pix e o envio do comprovante via WhatsApp: (71) 98690-4826<br><br>
         <b>Item:</b> <br><br>
         Estacionamento - R$15 <br><br>
+        <b>Dados: </b><br><br>
         Status: <b>Aguardando Pagamento </b><br>
         Data do Pedido: " . date('H:i:s d-m-Y') . "<br>
         Forma de Pagamento: PIX <br>

@@ -28,6 +28,7 @@ class ClientTicketConfirmPurchaseParkingAction extends ClientTicketAction {
         Recebemos seu pagamento com sucesso! Abaixo estão os dados da sua compra.<br><br>
         <b>Item:</b> <br><br>
         Estacionamento - R$15 <br><br>
+        <b>Dados: </b><br><br>
         Status: <b>Concluido </b><br>
         Data do Pedido: " . $client->getDataInclusao() . "<br>
         Forma de Pagamento: PIX <br>

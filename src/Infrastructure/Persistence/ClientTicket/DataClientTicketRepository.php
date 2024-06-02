@@ -70,7 +70,7 @@ class DataClientTicketRepository implements ClientTicketRepository
         JOIN aluno al ON al.id = cli.aluno_id
         JOIN ingressos i ON i.id = cli.ingresso_id
         WHERE cli.status = 1
-        GROUP BY Data, cli.nome, cli.email, al.nome, al.sobrenome, status_pagamento, periodo
+        GROUP BY Data, cli.nome, cli.email, al.nome, al.sobrenome, status_pagamento, periodo, cpf, estacionamento
         ORDER BY al.nome";
         return $this->databaseInterface->runSelect($sql);
     }
