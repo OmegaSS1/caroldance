@@ -17,12 +17,6 @@ class ClientTicketConfirmPurchaseParkingAction extends ClientTicketAction {
         ], 
         "id = " . $client->getId());
 
-        // $this->database->update('cliente_ingresso', [
-        //     "estacionamento" => 1
-        // ], 
-        // "aluno_id = " . $client->getAlunoId(), 
-        // "periodo = '" . $client->getPeriodo() .  "' AND cpf  = '" . $client->getCpf() . "' AND status = 1");
-
         $bodyMail = "
         <b>Pedido Realizado com Sucesso!</b><br><br>
         Recebemos seu pagamento com sucesso! Abaixo estão os dados da sua compra.<br><br>

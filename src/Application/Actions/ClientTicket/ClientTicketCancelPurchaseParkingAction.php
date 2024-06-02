@@ -17,20 +17,6 @@ class ClientTicketCancelPurchaseParkingAction extends ClientTicketAction {
         ], 
         "id = " . $client->getId());
 
-        // $bodyMail = "
-        // <b>Pedido Realizado com Sucesso!</b><br><br>
-        // Recebemos seu pagamento com sucesso! Abaixo estão os dados da sua compra.<br><br>
-        // <b>Item:</b> <br><br>
-        // Estacionamento - R$15 <br><br>
-        // <b>Dados: </b><br><br>
-        // Status: <b>Concluido </b><br>
-        // Data do Pedido: " . $client->getDataInclusao() . "<br>
-        // Forma de Pagamento: PIX <br>
-        // Valor Total: R$15 <br>
-        // Valido para: " . $client->getPeriodo();
-
-
-        // $this->sendMail("Carol Dance - Memórias", $bodyMail, [$client->getEmail()], [], ['vini15_silva@hotmail.com']);
         $this->database->commit();
 
         return $this->respondWithData();
@@ -43,9 +29,6 @@ class ClientTicketCancelPurchaseParkingAction extends ClientTicketAction {
 
         if($parking->getStatusPagamento() == 'Cancelado')
             throw new CustomDomainException('O pagamento já foi cancelado!');
-
-        // else if($parking->getStatusPagamento() == 'Concluido')
-        //     throw new CustomDomainException('Para pagamento concluido, o cancelamento não pode ser efetuado por aqui!');
         
         return $parking;
     }

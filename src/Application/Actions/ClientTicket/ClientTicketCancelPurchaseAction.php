@@ -11,7 +11,6 @@ class ClientTicketCancelPurchaseAction extends ClientTicketAction {
     protected function action(): Response {
         $form = $this->validateForm($this->post($this->request));
 
-        $ids = "";
         foreach($form['assentos'] as $v){
             $seatName = $this->ticketRepository->findTicketById($v)->getAssento();
             if(!!$data = $this->database->select('*', 'cliente_ingresso', "ingresso_id = $v", "periodo = '{$form['periodo']}' AND status = 1")){
