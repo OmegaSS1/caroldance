@@ -64,6 +64,9 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
                                 throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão!');
                             else if($parking->getStatusPagamento() == 'Concluido')
                                 throw new CustomDomainException('Para este aluno, o estacionamento já foi adquirido nesta sessão.');
+                            else 
+                                $hasClient = true;
+                            
                         }
                         else{
                             $hasClient = true;

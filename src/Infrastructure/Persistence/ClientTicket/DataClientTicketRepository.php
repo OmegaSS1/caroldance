@@ -67,7 +67,7 @@ class DataClientTicketRepository implements ClientTicketRepository
             periodo AS Sessao,
             CASE
                 WHEN estacionamento THEN 'SIM'
-                WHEN (SELECT id FROM estacionamento_ingresso ei WHERE ei.aluno_id = cli.aluno_id AND ei.cpf = cli.cpf AND ei.periodo = cli.periodo AND ei.status_pagamento = 'Concluido') THEN 'SIM'
+                WHEN (SELECT id FROM estacionamento_ingresso ei WHERE ei.aluno_id = cli.aluno_id AND ei.cpf = cli.cpf AND ei.periodo = cli.periodo AND ei.email = cli.email AND ei.status_pagamento = 'Concluido') THEN 'SIM'
             ELSE 'NAO'
         END Estacionamento
         FROM cliente_ingresso cli
@@ -126,7 +126,7 @@ class DataClientTicketRepository implements ClientTicketRepository
                     AND status = 1
                     AND periodo = '$period'
                     GROUP BY aluno_id)
-                    UNION
+                UNION
                 SELECT COUNT(*)
                 FROM estacionamento_ingresso
                 WHERE status_pagamento != 'Cancelado'
