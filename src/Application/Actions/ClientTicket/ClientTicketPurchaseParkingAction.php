@@ -46,12 +46,13 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
 
         $this->studentRepository->findStudentById((int)$form['aluno']);
 
-        $hasClient = false;
+        $hasClient         = false;
+        $limitTotalParking = 100;
 
         if(!!$data = $this->clientTicketRepository->findClientTicketByStudentId($form['aluno'])){
             foreach($data as $client){
                 if($client->getAlunoId() == (int)$form['aluno'] and $client->getStatus() == 1 and $client->getPeriodo() == $form['periodo']){
-                    if($client->getCpf() == $form['cpf'] and $client->getNome() == $form['nome'] and $client->getEmail() == $form['email']){
+                    if($client->getCpf() == $form['cpf']){
                         if($client->getEstacionamento() == 1){
                             if($client->getStatusPagamento() == 'Pendente')
                                 throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão.');
@@ -77,6 +78,12 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
         if(!$hasClient)
             throw new CustomDomainException('Nenhum pedido foi encontrado com os dados informados!');
 
+        $totalDBClientParking  = $this->clientTicketRepository->findTotalClientTicketByParking($form['periodo']);
+        $sumParking            = $totalDBClientParking + 1;
+        
+        if($sumParking > $limitTotalParking){
+            throw new CustomDomainException("O limite máximo de vagas disponíveis do estacionamento foi atingido!");
+        }
         return $form;
     }
 }

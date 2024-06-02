@@ -65,13 +65,17 @@ class DataClientTicketRepository implements ClientTicketRepository
             CONCAT(al.nome, ' ', al.sobrenome) AS Aluna,
             cli.status_pagamento AS Status,
             periodo AS Sessao,
-            IF(estacionamento, 'SIM', 'NÃO') Estacionamento
+            CASE
+                WHEN estacionamento THEN 'SIM'
+                WHEN (SELECT id FROM estacionamento_ingresso ei WHERE ei.aluno_id = cli.aluno_id AND ei.cpf = cli.cpf AND ei.periodo = cli.periodo AND ei.status_pagamento = 'Concluido') THEN 'SIM'
+            ELSE 'NAO'
+        END Estacionamento
         FROM cliente_ingresso cli
         JOIN aluno al ON al.id = cli.aluno_id
         JOIN ingressos i ON i.id = cli.ingresso_id
         WHERE cli.status = 1
-        GROUP BY Data, cli.nome, cli.email, al.nome, al.sobrenome, status_pagamento, periodo, cpf, estacionamento
-        ORDER BY al.nome";
+        GROUP BY Data, cli.nome, cli.email, al.nome, al.sobrenome, status_pagamento, periodo, cpf, estacionamento, aluno_id
+        ORDER BY Data DESC";
         return $this->databaseInterface->runSelect($sql);
     }
 
@@ -121,8 +125,13 @@ class DataClientTicketRepository implements ClientTicketRepository
                     WHERE estacionamento = 1 
                     AND status = 1
                     AND periodo = '$period'
-                    GROUP BY aluno_id) FOR UPDATE";
-        return (int) $this->databaseInterface->runSelect($sql)[0]['total'];
+                    GROUP BY aluno_id)
+                    UNION
+                SELECT COUNT(*)
+                FROM estacionamento_ingresso
+                WHERE status_pagamento != 'Cancelado'
+                AND periodo = '$period' FOR UPDATE";
+        return (int) $this->databaseInterface->runSelect($sql)[0]['total'] + (int) $this->databaseInterface->runSelect($sql)[1]['total'];
     }
 
     /**

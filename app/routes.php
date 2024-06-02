@@ -15,6 +15,7 @@ use App\Application\Actions\ClientTicket\{
     ClientTicketListParkingAction,
     Teste};
 
+use App\Application\Actions\ClientTicket\ClientTicketCancelPurchaseParkingAction;
 use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
 use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
 use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction, UserExportAction};
@@ -91,6 +92,7 @@ return function (App $app) {
             $clientTicket->group('/parking', function(Group $ticket) {
                 $ticket->post('/buy', ClientTicketPurchaseParkingAction::class);
                 $ticket->put('/confirm', ClientTicketConfirmPurchaseParkingAction::class);
+                $ticket->put('/cancel', ClientTicketCancelPurchaseParkingAction::class);
                 $ticket->get('', ClientTicketListParkingAction::class);
             });
             
