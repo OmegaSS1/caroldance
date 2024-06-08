@@ -18,28 +18,25 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         foreach($form['assentos'] as $v){
             $seatName = $this->ticketRepository->findTicketById($v)->getAssento();
             if(!!$data = $this->database->select('*', 'cliente_ingresso', "ingresso_id = $v", "periodo = '{$form['periodo']}' AND status = 1")){
-                if($data[0]['status_pagamento'] == 'Concluido') continue;
-                else {
-                    $this->database->update('cliente_ingresso', [
-                        "status_pagamento" => "Concluido"
-                    ],
-                    "id = {$data[0]['id']}");
-                    switch((int)$data[0]['valor']){
-                        case 0:
-                            $ticketMail .= "Assento $seatName - Cortesia";
-                            $ticketMail .= "<br>";
-                            break;
-                        default:
-                            $vTotal += 30;
-                            $ticketMail .= "Assento $seatName - R$ " . $data[0]['valor'];
-                            $ticketMail .= "<br>";
-                    }
-                    $form['email'] = $data[0]['email'];
-                    if($data[0]['estacionamento'] == '1'){
-                        $estacionamento = "Estacionamento: R$15<br><br>";
-                        $vEstacionamento = 15;
+                $this->database->update('cliente_ingresso', [
+                    "status_pagamento" => "Concluido"
+                ],
+                "id = {$data[0]['id']}");
+                switch((int)$data[0]['valor']){
+                    case 0:
+                        $ticketMail .= "Assento $seatName - Cortesia";
+                        $ticketMail .= "<br>";
+                        break;
+                    default:
+                        $vTotal += 30;
+                        $ticketMail .= "Assento $seatName - R$ " . $data[0]['valor'];
+                        $ticketMail .= "<br>";
+                }
+                $form['email'] = $data[0]['email'];
+                if($data[0]['estacionamento'] == '1'){
+                    $estacionamento = "Estacionamento: R$15<br><br>";
+                    $vEstacionamento = 15;
 
-                    }
                 }
             }
             else{
@@ -67,7 +64,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
 
         $periodo = str_replace('/', '-', $form['periodo']);
 
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com'], false, [], false, '', true, [["data" => $decodeBase64, "name" => $periodo . '.png', "typeMIME" => 'base64', "typeImage" => "image/png"]]);
+        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com', 'biabarros10@icloud.com'], false, [], false, '', true, [["data" => $decodeBase64, "name" => $periodo . '.png', "typeMIME" => 'base64', "typeImage" => "image/png"]]);
 
         $this->database->commit();
 

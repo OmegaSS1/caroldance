@@ -16,6 +16,7 @@ use App\Application\Actions\ClientTicket\{
     Teste};
 
 use App\Application\Actions\ClientTicket\ClientTicketCancelPurchaseParkingAction;
+use App\Application\Actions\ClientTicket\ClientTicketEnableValidateTicketAction;
 use App\Application\Actions\MonthlyPayment\{MonthlyPaymentListAction};
 use App\Application\Actions\Signin\{SigninChangePasswordAction, SigninLinkForgotPasswordAction, SigninLoginAction};
 use App\Application\Actions\User\{UserListAction, UserViewAction, UserLoginRegisterAction, UserAdminRegisterAction, UserExportAction};
@@ -85,6 +86,7 @@ return function (App $app) {
                 $ticket->put('/confirm', ClientTicketConfirmPurchaseAction::class);
                 $ticket->get('', ClientTicketListAction::class);
                 $ticket->post('/validateTicket', ClientTicketValidateTicketAction::class);
+                $ticket->post('/enableValidateTicket', ClientTicketEnableValidateTicketAction::class);
             });
             $clientTicket->group('/seat', function(Group $seat) {
                 $seat->get('', ClientTicketListSeatsAction::class);
