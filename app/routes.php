@@ -52,7 +52,7 @@ return function (App $app) {
     $app->group('/caroldance', function (Group $group) {
 
         $group->group('/teste', function (Group $teste) {
-            $teste->post('', Teste::class);
+            $teste->get('', Teste::class);
 
             $teste->post('/csrf', function (Request $request, Response $response) {
                 $response->getBody()->write('Deu certo');
