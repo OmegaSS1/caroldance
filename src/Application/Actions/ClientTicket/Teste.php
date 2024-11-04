@@ -9,6 +9,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 class Teste  extends ClientTicketAction{
 
     protected function action(): Response {
+
+        return $this->respondWithData(["teste" => "teste"]);
         $form = $this->validateForm($this->post($this->request));
 
         $ticketMail = "<b>Ingressos: </b><br><br>";
