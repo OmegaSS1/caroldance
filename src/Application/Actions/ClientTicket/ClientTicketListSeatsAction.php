@@ -82,7 +82,7 @@ class ClientTicketListSeatsAction extends ClientTicketAction {
                 if(!in_array($letter, $freeSeats))
                     $valor = 40;
             }
-            $data[$k] = ["id" => $v->getId(), "name" => $v->getAssento(), "disponivel" => $isAvaible, "valor" => 40];
+            $data[$k] = ["id" => $v->getId(), "name" => $v->getAssento(), "disponivel" => $isAvaible, "valor" => $valor];
 
         }
     }
