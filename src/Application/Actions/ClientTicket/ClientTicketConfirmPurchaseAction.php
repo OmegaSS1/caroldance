@@ -28,7 +28,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
                         $ticketMail .= "<br>";
                         break;
                     default:
-                        $vTotal += 30;
+                        $vTotal += 40;
                         $ticketMail .= "Assento $seatName - R$ " . $data[0]['valor'];
                         $ticketMail .= "<br>";
                 }

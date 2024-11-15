@@ -12,7 +12,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $form = $this->validateForm($this->post($this->request));
 
         $ticketMail = "<b>Ingressos: </b><br><br>";
-        $vTotal     = (array_count_values($form['assentos'])['30'] ?? 0) * 30;
+        $vTotal     = (array_count_values($form['assentos'])['40'] ?? 0) * 40;
         $fTotal     =  array_count_values($form['assentos'])['0']  ?? 0;
 
 
@@ -81,7 +81,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $limitFreeTicketPerStudent = 2;
 
         $totalClientTickets     = count($form['assentos']);
-        $totalPayTicketsClient  = array_count_values($form['assentos'])['30'] ?? 0;
+        $totalPayTicketsClient  = array_count_values($form['assentos'])['40'] ?? 0;
         $totalFreeTicketsClient = array_count_values($form['assentos'])['0']  ?? 0;
 
         $student = $this->studentRepository->findStudentById((int)$form['aluno']);
@@ -159,7 +159,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $c = $limitFreeTicketPerStudent - $totalFreeTicketsClient;
         foreach($form['assentos'] as $k => $v){
             if($c == 0) break;
-            else if($v == 30){
+            else if($v == 40){
                 $form['assentos'][$k] = 0;
                 $c--;
             }
