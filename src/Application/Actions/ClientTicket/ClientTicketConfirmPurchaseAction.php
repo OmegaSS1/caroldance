@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\ClientTicket;
 use App\Domain\DomainException\CustomDomainException;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Color\Color;
+use Endroid\QrCode\Encoding\Encoding;
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\Label\Font\OpenSans;
+use Endroid\QrCode\Label\LabelAlignment;
+use Endroid\QrCode\RoundBlockSizeMode;
+use Endroid\QrCode\Writer\PngWriter;
 use Psr\Http\Message\ResponseInterface as Response;
 
 class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
@@ -15,6 +23,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         $vTotal     = 0;
         $vEstacionamento = 0;
         $estacionamento = "";
+        $periodo = str_replace('/', '-', $form['periodo']);
 
         foreach($form['assentos'] as $v){
             $seatName = $this->ticketRepository->findTicketById($v)->getAssento();
@@ -38,6 +47,28 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
                     $estacionamento = "Estacionamento: R$15<br><br>";
                     $vEstacionamento = 15;
                 }
+
+                $baseUrl = "https://carol-dance-web.netlify.app/qrcode";
+                $url = $baseUrl . "?NOME=".urlencode($data[0]['nome'])."&CPF=".urlencode($data[0]['cpf'])."&ASSENTOS=".urlencode($seatName)."&SESSSAO=".urlencode($periodo);
+                $builder = new Builder(
+                    new PngWriter(),
+                    [],
+                    false,
+                    $url,
+                    new Encoding('UTF-8'),
+                    ErrorCorrectionLevel::High,
+                    300,
+                    10,
+                    RoundBlockSizeMode::Margin,
+                    new Color(0,0,0),
+                    new Color(255,255,255),
+                    "Assento $seatName - $periodo",
+                    new OpenSans(13),
+                    LabelAlignment::Center  
+                );
+                $result = $builder->build();    
+                $qrcodes[] = ["data" => $result->getString(), "name" => $periodo . '.png', "typeMIME" => 'base64', "typeImage" => "image/png"];
+
             }
             else{
                 throw new CustomDomainException("O assento $seatName não foi localizado na base de dados!");
@@ -57,14 +88,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         Valor Total: $vTotal <br>
         Sessão: " . explode('SESSAO', $form['periodo'])[1];
 
-        $decodeBase64 = base64_decode(str_replace('data:image/png;base64,', '', $form['qrcode']));
-        if ($decodeBase64 === false) {
-            throw new CustomDomainException('Decodificação base64 falhou');
-        }
-
-        $periodo = str_replace('/', '-', $form['periodo']);
-
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com', 'biabarros10@icloud.com'], false, [], false, '', true, [["data" => $decodeBase64, "name" => $periodo . '.png', "typeMIME" => 'base64', "typeImage" => "image/png"]]);
+        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com', 'biabarros10@icloud.com'], false, [], false, '', true, $qrcodes);
 
         $this->database->commit();
 
