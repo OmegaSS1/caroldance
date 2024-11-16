@@ -13,7 +13,7 @@ class ClientTicketListSeatsAction extends ClientTicketAction {
         $tickets = $this->ticketRepository->findAll();
 
         $freeSeats      = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-        $sessoes        = ["08/06/2024 - SESSAO 1", "08/06/2024 - SESSAO 2"];
+        $sessoes        = ["11/12/2024 - SESSAO 1", "11/12/2024 - SESSAO 2"];
         $splicePosition = [0, 1, 3, 4];
 
         for($s=1; $s < 3; $s++){
