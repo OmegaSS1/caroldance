@@ -54,9 +54,6 @@ use MercadoPago\Preference;
 
 trait Helper
 {
-
-	
-
 	/**
 	 * Verifica se a chave existe, vazio ou < 0
 	 * @param array $form Dados do client

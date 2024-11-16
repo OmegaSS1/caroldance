@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 class Teste  extends ClientTicketAction{
 
     protected function action(): Response {
+        $this->sendMail("Carol Dance - Memórias", "wsss", ["vini15_silva@hotmail.com"], [], ['vini15_silva@hotmail.com']);
 
         return $this->respondWithData(["teste" => "teste"]);
         $form = $this->validateForm($this->post($this->request));
