@@ -131,7 +131,8 @@ class DataClientTicketRepository implements ClientTicketRepository
                 FROM estacionamento_ingresso
                 WHERE status_pagamento != 'Cancelado'
                 AND periodo = '$period' FOR UPDATE";
-        return (int) $this->databaseInterface->runSelect($sql)[0]['total'] + (int) $this->databaseInterface->runSelect($sql)[1]['total'];
+        // return (int) $this->databaseInterface->runSelect($sql)[0]['total'] + (int) @$this->databaseInterface->runSelect($sql)[1]['total'];
+        return (int) $this->databaseInterface->runSelect($sql)[0]['total'];
     }
 
     /**
