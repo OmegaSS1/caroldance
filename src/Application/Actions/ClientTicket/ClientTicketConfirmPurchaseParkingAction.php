@@ -30,7 +30,7 @@ class ClientTicketConfirmPurchaseParkingAction extends ClientTicketAction {
         Valido para: " . $client->getPeriodo();
 
 
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$client->getEmail()], [], ['vini15_silva@hotmail.com']);
+        $this->sendMail("Carol Dance - O verdadeiro presente de natal!", $bodyMail, [$client->getEmail()], [], ['vini15_silva@hotmail.com']);
         $this->database->commit();
 
         return $this->respondWithData();

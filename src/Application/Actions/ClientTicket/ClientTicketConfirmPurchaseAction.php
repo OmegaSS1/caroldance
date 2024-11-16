@@ -88,7 +88,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         Valor Total: $vTotal <br>
         Sessão: " . explode('SESSAO', $form['periodo'])[1];
 
-        $this->sendMail("Carol Dance - Memórias", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com', 'biabarros10@icloud.com'], false, [], false, '', true, $qrcodes);
+        $this->sendMail("Carol Dance - O verdadeiro presente de natal!", $bodyMail, [$form["email"]], [], ['vini15_silva@hotmail.com', 'biabarros10@icloud.com'], false, [], false, '', true, $qrcodes);
 
         $this->database->commit();
 
