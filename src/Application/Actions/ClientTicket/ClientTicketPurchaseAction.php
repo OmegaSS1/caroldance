@@ -133,7 +133,8 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
                 }
             }
             if($quantityFreeTickets + $totalFreeTicketsClient > $limitFreeTicketPerStudent){
-                if($student->getId() != 201 and date('d-m-Y') < '26-05-2024'){
+                // if($student->getId() != 201 and date('d-m-Y') < '26-05-2024'){
+                if(date('d-m-Y') < '23-11-2024'){
                     $avaible = $limitFreeTicketPerStudent - $quantityFreeTickets;
                     throw new CustomDomainException("São permitidos até $limitFreeTicketPerStudent ingressos cortesias por aluno! O mesmo possui $avaible ingresso(s) cortesia disponivel");
                 }
@@ -142,14 +143,14 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
                 throw new CustomDomainException("Para esta Sessão, a vaga do estacionamento já foi solicitada!");
             }
             else {
-                if($form['aluno'] !== 203)
-                    $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $quantityFreeTickets + $totalFreeTicketsClient, $form);
+                // if($form['aluno'] !== 203)
+                $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $quantityFreeTickets + $totalFreeTicketsClient, $form);
             }
         }
         else {
             // Libera os gratuitos
-            if($form['aluno'] !== 203)
-                $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $totalFreeTicketsClient, $form);
+            // if($form['aluno'] !== 203)
+            $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $totalFreeTicketsClient, $form);
         }
 
         return $form;

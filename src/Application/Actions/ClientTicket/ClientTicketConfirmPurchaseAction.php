@@ -14,6 +14,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         $ticketMail = "<b>Ingressos: </b><br><br>";
         $vTotal     = 0;
         $vEstacionamento = 0;
+        $estacionamento = "";
 
         foreach($form['assentos'] as $v){
             $seatName = $this->ticketRepository->findTicketById($v)->getAssento();
@@ -36,7 +37,6 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
                 if($data[0]['estacionamento'] == '1'){
                     $estacionamento = "Estacionamento: R$15<br><br>";
                     $vEstacionamento = 15;
-
                 }
             }
             else{

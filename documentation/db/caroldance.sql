@@ -164,6 +164,7 @@ CREATE TABLE IF NOT EXISTS cliente_ingresso (
   periodo VARCHAR(50) NOT NULL,
   status_pagamento SET('Pendente', 'Em processamento', 'Concluido', 'Falhou', 'Cancelado', 'Estornado') DEFAULT 'Pendente',
   estacionamento BOOLEAN DEFAULT 0,
+  ingresso_validado BOOLEAN DEFAULT 0,
   dh_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
   dh_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP(),
   status BOOLEAN DEFAULT 1,
