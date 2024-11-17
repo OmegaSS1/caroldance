@@ -6,7 +6,7 @@ use PDO;
 use PDOException;
 use Psr\Log\LoggerInterface;
 
-class Mysqlconnection implements DatabaseInterface {
+class MysqlConnection implements DatabaseInterface {
 
     private $connection;
     private string $loggerMessage = "Erro inesperado na validação dos dados! Consulte o administrador do sistema.";
@@ -19,6 +19,7 @@ class Mysqlconnection implements DatabaseInterface {
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         $conn->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        $conn->setAttribute(PDO::ATTR_PERSISTENT, true);
 
         $this->connection = $conn;
         $this->connection->beginTransaction();
@@ -185,7 +186,6 @@ class Mysqlconnection implements DatabaseInterface {
 
     private function bindValue($query, array $values){
         try{
-            // self::$transaction[] = $this->connection;
             $stm = $this->connection->prepare($query);
             
             $stm->execute(array_values($values));
@@ -201,6 +201,11 @@ class Mysqlconnection implements DatabaseInterface {
 
     public function commit(){
       $this->connection->commit();
-      $this->connection->beginTransaction();
+    }
+
+    public function __destruct(){
+        if ($this->connection) {
+            $this->connection = null;
+        }
     }
 }

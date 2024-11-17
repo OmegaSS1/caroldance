@@ -36,4 +36,8 @@ class DatabaseManager implements DatabaseInterface {
     return $this->getConnection('mysql')->commit();
   }
 
+  public function __destruct(){
+    $this->getConnection('mysql')->__destruct();
+  }
+
 }

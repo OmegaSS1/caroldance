@@ -9,6 +9,6 @@ interface DatabaseInterface {
   public function insert(string $table, array $values);
   public function delete(string $table, array $values);
   public function runSelect($sql);
-
   public function commit();
+  public function __destruct();
 }

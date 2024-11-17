@@ -53,6 +53,8 @@ abstract class Action
             $this->logInfo["Response"] = $e->getMessage();
             $this->logger->error(json_encode($this->logInfo, JSON_UNESCAPED_UNICODE), $this->request->getParsedBody() ?? $this->args);
             throw new HttpNotFoundException($this->request, $e->getMessage());
+        } finally {
+            $this->database->__destruct();
         }
     }
 
