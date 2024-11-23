@@ -94,7 +94,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         $payload = [
             "nome" => $dataClient[0]['nome'],
             "cpf"  => $dataClient[0]['cpf'],
-            "seatName" => implode(',', $form['assentos']),
+            "seatName" => implode(',', $seats),
             "periodo"  => "",
             "nomeIngresso" => ""
         ];
