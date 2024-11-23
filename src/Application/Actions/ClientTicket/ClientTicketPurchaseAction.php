@@ -48,6 +48,10 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
             $estacionamento .= "Estacionamento: R$15<br><br>";
             $vTotal += 15;
         }
+        else if ($form['estacionamento'] == '2'){
+            $estacionamento .= "Estacionamento: R$25<br><br>";
+            $vTotal += 25;
+        }
 
         $pay  = "Recebemos seu pedido com sucesso, estamos aguardando o pagamento via pix e o envio do comprovante via WhatsApp: (71) 98690-4826<br><br>";
         $free = "Recebemos seu pedido com sucesso! 🎉 As suas cortesia(s) já foram enviadas para o seu e-mail. Mal podemos esperar para vê-lo no espetáculo!🌟 <br><br>";
@@ -77,7 +81,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $form['email']    = $this->isEmail($form['email']);
 
         $limitTotalTickets         = 482;
-        $limitTotalParking         = 100;
+        $limitTotalParking         = 80;
         $limitFreeTicketPerStudent = 2;
 
         $totalClientTickets     = count($form['assentos']);
@@ -138,9 +142,9 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
                     throw new CustomDomainException("São permitidos até $limitFreeTicketPerStudent ingressos cortesias por aluno! O mesmo possui $avaible ingresso(s) cortesia disponivel");
                 }
             }
-            else if(count($quantityUsedParking) > 0 and in_array($form['periodo'], $quantityUsedParking)){
-                throw new CustomDomainException("Para esta Sessão, a vaga do estacionamento já foi solicitada!");
-            }
+            // else if(count($quantityUsedParking) > 0 and in_array($form['periodo'], $quantityUsedParking)){
+            //     throw new CustomDomainException("Para esta Sessão, a vaga do estacionamento já foi solicitada!");
+            // }
             else {
                 if($form['aluno'] !== 200 and $form['aluno'] !== 201)
                     $form = $this->unlockFreeTickets($limitFreeTicketPerStudent, $quantityFreeTickets + $totalFreeTicketsClient, $form);
