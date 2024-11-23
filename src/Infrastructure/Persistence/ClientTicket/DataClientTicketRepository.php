@@ -65,11 +65,7 @@ class DataClientTicketRepository implements ClientTicketRepository
             CONCAT(al.nome, ' ', al.sobrenome) AS Aluna,
             cli.status_pagamento AS Status,
             periodo AS Sessao,
-            CASE
-                WHEN estacionamento THEN 'SIM'
-                WHEN (SELECT id FROM estacionamento_ingresso ei WHERE ei.aluno_id = cli.aluno_id AND ei.cpf = cli.cpf AND ei.periodo = cli.periodo AND ei.email = cli.email AND ei.status_pagamento = 'Concluido') THEN 'SIM'
-            ELSE 'NAO'
-        END Estacionamento
+            estacionamento AS Estacionamento
         FROM cliente_ingresso cli
         JOIN aluno al ON al.id = cli.aluno_id
         JOIN ingressos i ON i.id = cli.ingresso_id
