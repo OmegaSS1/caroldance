@@ -47,30 +47,31 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
         $this->studentRepository->findStudentById((int)$form['aluno']);
 
         $hasClient         = false;
-        $limitTotalParking = 100;
+        $limitTotalParking = 80;
 
         if(!!$data = $this->clientTicketRepository->findClientTicketByStudentId($form['aluno'])){
             foreach($data as $client){
                 if($client->getAlunoId() == (int)$form['aluno'] and $client->getStatus() == 1 and $client->getPeriodo() == $form['periodo']){
                     if($client->getCpf() == $form['cpf']){
-                        if($client->getEstacionamento() == 1){
-                            if($client->getStatusPagamento() == 'Pendente')
-                                throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão.');
-                            else
-                                throw new CustomDomainException("Para este aluno, o estacionamento já foi adquirido nesta sessão.");
-                        }
-                        else if(!!$parking = $this->parkingTicketRepository->findParkingTicketByStudentIdAndPeriod($form['aluno'], $form['periodo'])){
-                            if($parking->getStatusPagamento() == 'Pendente')
-                                throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão!');
-                            else if($parking->getStatusPagamento() == 'Concluido')
-                                throw new CustomDomainException('Para este aluno, o estacionamento já foi adquirido nesta sessão.');
-                            else 
-                                $hasClient = true;
+                        // if($client->getEstacionamento() == 1){
+                        //     if($client->getStatusPagamento() == 'Pendente')
+                        //         throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão.');
+                        //     else
+                        //         throw new CustomDomainException("Para este aluno, o estacionamento já foi adquirido nesta sessão.");
+                        // }
+                        // else if(!!$parking = $this->parkingTicketRepository->findParkingTicketByStudentIdAndPeriod($form['aluno'], $form['periodo'])){
+                        //     if($parking->getStatusPagamento() == 'Pendente')
+                        //         throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão!');
+                        //     else if($parking->getStatusPagamento() == 'Concluido')
+                        //         throw new CustomDomainException('Para este aluno, o estacionamento já foi adquirido nesta sessão.');
+                        //     else 
+                        //         $hasClient = true;
                             
-                        }
-                        else{
-                            $hasClient = true;
-                        }
+                        // }
+                        // else{
+                            // $hasClient = true;
+                        // }
+                        $hasClient = true;
                     }
                 }
             }
