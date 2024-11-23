@@ -77,7 +77,8 @@ class ClientTicketListSeatsAction extends ClientTicketAction {
                         $valor     = $s->getValor();
                     }
                     else {
-                        $valor = 40;
+                        if(!in_array($letter, $freeSeats))
+                            $valor = 40;
                     }
                 }
             }
