@@ -26,11 +26,13 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         $periodo = $form['periodo'];
         $qrcodes = [];
         $dataClient = "";
+        $seats = [];
 
         foreach($form['assentos'] as $v){
             $seatName = $this->ticketRepository->findTicketById($v)->getAssento();
             if(!!$data = $this->database->select('*', 'cliente_ingresso', "ingresso_id = $v", "periodo = '{$form['periodo']}' AND status = 1")){
 
+                array_push($seats, $seatName);
                 $dataClient = $data;
                 $this->database->update('cliente_ingresso', [
                     "status_pagamento" => "Concluido"
@@ -90,9 +92,9 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
             }
         }
         $payload = [
-            "nome" => $data[0]['nome'],
-            "cpf"  => $data[0]['cpf'],
-            "seatName" => $seatName,
+            "nome" => $dataClient[0]['nome'],
+            "cpf"  => $dataClient[0]['cpf'],
+            "seatName" => implode(',', $form['assentos']),
             "periodo"  => "",
             "nomeIngresso" => ""
         ];
