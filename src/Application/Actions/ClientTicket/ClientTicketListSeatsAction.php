@@ -76,6 +76,9 @@ class ClientTicketListSeatsAction extends ClientTicketAction {
                         $isAvaible = false;
                         $valor     = $s->getValor();
                     }
+                    else {
+                        $valor = 40;
+                    }
                 }
             }
             else{
