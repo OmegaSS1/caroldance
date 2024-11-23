@@ -118,7 +118,7 @@ class ClientTicketConfirmPurchaseAction extends ClientTicketAction {
         $estacionamento
         <b>Dados: </b><br><br>
         Status: <b>Concluído</b><br>
-        Data do Pedido: " . date('H:i:s d-m-Y') . "<br>
+        Data do Pedido: " . date('d/m/Y H:i:s') . "<br>
         Forma de Pagamento: PIX <br>
         Valor Total: $vTotal <br>
         Sessão: " . explode('SESSAO', $form['periodo'])[1];

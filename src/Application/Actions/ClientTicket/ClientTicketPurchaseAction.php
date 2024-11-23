@@ -62,7 +62,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         $estacionamento
         <b>Dados: </b><br><br>
         Status: <b>" . ($vTotal == 0 ? "Pago </b><br>" : "Aguardando Pagamento </b><br>") . "
-        Data do Pedido: " . date('H:i:s d-m-Y') . "<br>
+        Data do Pedido: " . date('d/m/Y H:i:s') . "<br>
         " . ($vTotal == 0 ? "" : "Forma de Pagamento: PIX <br>") . "
         Valor Total: R$$vTotal <br>
         Valido para: " . $form['periodo'];
