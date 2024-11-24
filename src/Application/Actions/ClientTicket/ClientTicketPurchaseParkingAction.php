@@ -71,8 +71,7 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
                     //     throw new CustomDomainException("Nenhum pedido foi encontrado com o cpf informado!");
                     
                     if($form['estacionamento'] == 1 and $client->getPeriodo() != $form['periodo'])
-                        throw new CustomDomainException("Nenhum pedido foi encontrado com a sessão informada!");
-                
+                        continue;
                     else if ($form['estacionamento'] == 1 or $form['estacionamento'] == 2){
                         // if($client->getEstacionamento() == 1){
                         //     if($client->getStatusPagamento() == 'Pendente')
