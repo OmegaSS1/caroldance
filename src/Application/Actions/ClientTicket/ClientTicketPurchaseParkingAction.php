@@ -66,39 +66,35 @@ class ClientTicketPurchaseParkingAction extends ClientTicketAction {
 
         if(!!$data = $this->clientTicketRepository->findClientTicketByStudentId($form['aluno'])){
             foreach($data as $client){
-                if($client->getAlunoId() != (int)$form['aluno'])
-                    throw new CustomDomainException("Nenhum aluno foi localizado com os dados informados!");
-
-                else if($client->getStatus() != 1)
-                    throw new CustomDomainException("Nenhum pedido foi encontrado com os dados informados!");
-
-                else if($client->getCpf() != $form['cpf'])   
-                    throw new CustomDomainException("Nenhum pedido foi encontrado com o cpf informado!");
+                if($client->getStatus() == 1){
+                    // else if($client->getCpf() != $form['cpf'])   
+                    //     throw new CustomDomainException("Nenhum pedido foi encontrado com o cpf informado!");
+                    
+                    if($form['estacionamento'] == 1 and $client->getPeriodo() != $form['periodo'])
+                        throw new CustomDomainException("Nenhum pedido foi encontrado com a sessão informada!");
                 
-                else if($form['estacionamento'] == 1 and $client->getPeriodo() != $form['periodo'])
-                    throw new CustomDomainException("Nenhum pedido foi encontrado com a sessão informada!");
-             
-                else if ($form['estacionamento'] == 1 or $form['estacionamento'] == 2){
-                    // if($client->getEstacionamento() == 1){
-                    //     if($client->getStatusPagamento() == 'Pendente')
-                    //         throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão.');
-                    //     else
-                    //         throw new CustomDomainException("Para este aluno, o estacionamento já foi adquirido nesta sessão.");
-                    // }
-                    // else if(!!$parking = $this->parkingTicketRepository->findParkingTicketByStudentIdAndPeriod($form['aluno'], $form['periodo'])){
-                    //     if($parking->getStatusPagamento() == 'Pendente')
-                    //         throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão!');
-                    //     else if($parking->getStatusPagamento() == 'Concluido')
-                    //         throw new CustomDomainException('Para este aluno, o estacionamento já foi adquirido nesta sessão.');
-                    //     else 
-                    //         $hasClient = true;
-                        
-                    // }
-                    // else{
-                        // $hasClient = true;
-                    // }
-                    $hasClient = true;
-                    break;
+                    else if ($form['estacionamento'] == 1 or $form['estacionamento'] == 2){
+                        // if($client->getEstacionamento() == 1){
+                        //     if($client->getStatusPagamento() == 'Pendente')
+                        //         throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão.');
+                        //     else
+                        //         throw new CustomDomainException("Para este aluno, o estacionamento já foi adquirido nesta sessão.");
+                        // }
+                        // else if(!!$parking = $this->parkingTicketRepository->findParkingTicketByStudentIdAndPeriod($form['aluno'], $form['periodo'])){
+                        //     if($parking->getStatusPagamento() == 'Pendente')
+                        //         throw new CustomDomainException('Para este aluno, existe um pedido de estacionamento pendente nesta sessão!');
+                        //     else if($parking->getStatusPagamento() == 'Concluido')
+                        //         throw new CustomDomainException('Para este aluno, o estacionamento já foi adquirido nesta sessão.');
+                        //     else 
+                        //         $hasClient = true;
+                            
+                        // }
+                        // else{
+                            // $hasClient = true;
+                        // }
+                        $hasClient = true;
+                        break;
+                    }
                 }
             }
         }
