@@ -113,7 +113,7 @@ class DataClientTicketRepository implements ClientTicketRepository
      */
     public function findTotalClientTicketByParking(string $period): int
     {
-        $sql = "SELECT SUM(total.total_contagem) FROM (
+        $sql = "SELECT SUM(total.total_contagem) total_contagem FROM (
                     SELECT IFNULL(SUM(est.estacionamento), 0) AS total_contagem
                                     FROM (
                                     SELECT 
