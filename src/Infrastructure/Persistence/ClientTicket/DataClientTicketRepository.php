@@ -113,27 +113,26 @@ class DataClientTicketRepository implements ClientTicketRepository
      */
     public function findTotalClientTicketByParking(string $period): int
     {
-        $sql = "SELECT SUM(est.estacionamento) AS total
-                    FROM (
-                    SELECT 
-                        estacionamento
-                    FROM cliente_ingresso ci 
-                    WHERE STATUS = 1
+        $sql = "SELECT SUM(total.total_contagem) FROM (
+                    SELECT IFNULL(SUM(est.estacionamento), 0) AS total_contagem
+                                    FROM (
+                                    SELECT 
+                                        estacionamento
+                                    FROM cliente_ingresso ci 
+                                    WHERE status = 1
+                                    AND periodo = '$period'
+                                    GROUP BY dh_atualizacao, email, cpf, aluno_id, nome
+                                ) AS est
+                    UNION
+                    SELECT COUNT(*)
+                    FROM estacionamento_ingresso
+                    WHERE status_pagamento != 'Cancelado'
                     AND periodo = '$period'
-                    GROUP BY dh_atualizacao, email, cpf, aluno_id, nome
-                ) AS est
-                UNION
-                SELECT COUNT(*)
-                FROM estacionamento_ingresso
-                WHERE status_pagamento != 'Cancelado'
-                AND periodo = '$period' FOR UPDATE";
+                ) total FOR UPDATE";
         
         $v1 = $this->databaseInterface->runSelect($sql);
-        $v2 = $this->databaseInterface->runSelect($sql);
 
-        $v1 = !empty($v1) ? $v1[0]['total']: 0;
-        $v2 = !empty($v2) ? $v2[0]['total']: 0;
-        return $v1 + $v2;
+        return $v1[0]['total_contagem'];
     }
 
     /**
