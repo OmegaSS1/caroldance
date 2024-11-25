@@ -91,8 +91,8 @@ return function (App $app) {
             $seat->get('', ClientTicketListSeatsAction::class);
         });
         $clientTicket->group('/parking', function(Group $ticket) {
-            //$ticket->post('/buy', ClientTicketPurchaseParkingAction::class);
-            //$ticket->put('/confirm', ClientTicketConfirmPurchaseParkingAction::class);
+            $ticket->post('/buy', ClientTicketPurchaseParkingAction::class);
+            $ticket->put('/confirm', ClientTicketConfirmPurchaseParkingAction::class);
             $ticket->put('/cancel', ClientTicketCancelPurchaseParkingAction::class);
             $ticket->get('', ClientTicketListParkingAction::class);
         });

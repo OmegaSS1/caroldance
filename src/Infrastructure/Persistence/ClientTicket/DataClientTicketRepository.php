@@ -132,7 +132,7 @@ class DataClientTicketRepository implements ClientTicketRepository
         
         $v1 = $this->databaseInterface->runSelect($sql);
 
-        return $v1[0]['total_contagem'];
+        return (int) $v1[0]['total_contagem'];
     }
 
     /**
