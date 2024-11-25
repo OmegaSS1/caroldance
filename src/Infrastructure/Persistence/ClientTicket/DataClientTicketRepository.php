@@ -113,15 +113,15 @@ class DataClientTicketRepository implements ClientTicketRepository
      */
     public function findTotalClientTicketByParking(string $period): int
     {
-        $sql = "SELECT COUNT(*) AS total
-                FROM cliente_ingresso 
-                WHERE id IN (
-                    SELECT MAX(id) 
-                    FROM cliente_ingresso 
-                    WHERE estacionamento = 1 
-                    AND status = 1
+        $sql = "SELECT SUM(est.estacionamento) AS total
+                    FROM (
+                    SELECT 
+                        estacionamento
+                    FROM cliente_ingresso ci 
+                    WHERE STATUS = 1
                     AND periodo = '$period'
-                    GROUP BY aluno_id)
+                    GROUP BY dh_atualizacao, email, cpf, aluno_id, nome
+                ) AS est
                 UNION
                 SELECT COUNT(*)
                 FROM estacionamento_ingresso
