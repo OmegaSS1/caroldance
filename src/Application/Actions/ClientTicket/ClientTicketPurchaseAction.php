@@ -104,7 +104,7 @@ class ClientTicketPurchaseAction extends ClientTicketAction {
         else if($totalFreeTicketsClient > $limitFreeTicketPerStudent){
             throw new CustomDomainException("São permitidos até $limitFreeTicketPerStudent ingressos cortesias por aluno!");
         }
-        else if($sumParking > $limitTotalParking){
+        else if($sumParking > $limitTotalParking and (int) $form['estacionamento'] > 0){
             throw new CustomDomainException("O limite máximo de vagas disponíveis do estacionamento foi atingido!");
         }
 
